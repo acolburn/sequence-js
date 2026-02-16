@@ -1,0 +1,74 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  margin: 0;
+  /* height: 100vh; */
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-gap: 10px;
+  /* max-width: 800px;  */
+  width: 100%; /* Full-width for responsiveness */
+  margin: 0 auto; /* Center the grid */
+}
+
+.card {
+  position: relative;
+  aspect-ratio: 226/314;
+  background-size: cover;
+  background-position: center;
+  max-width: 150px;
+  height: auto; /* Allow height to adjust dynamically */
+}
+
+.overlay {
+  position: absolute;
+  top: 32%;
+  left: 38%;
+  width: 40%; /* width and height are image size */
+  height: 25%;
+  visibility: hidden;
+}
+
+.hand-display {
+  display: flex;
+  gap: 10px;
+  border: 2px solid #333; /* 2px border around the div */
+  padding: 10px 0 10px 10px; /* Padding around the cards */
+  margin-top: 20px; /* Space from the board */
+  width: 100%;
+}
+
+.hand-display .card {
+  height: 10vh;
+  max-width: 100px;
+}
+
+#side-container {
+  border: 2px solid #333; /* 2px border around the div */
+  width: 10%; /* Adjust this width as needed for a card */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center the cards vertically */
+  align-items: center;
+  gap: 10px; /* Gap between the cards */
+  margin-right: 20px; /* Space between the side container and board */
+}
+
+#game-container {
+  flex-grow: 1; /* Allow the game container to take up remaining space */
+  display: flex;
+  flex-direction: column;
+  /* border: 2px solid red;  */
+  justify-content: flex-start; /* Start stacking items from the start */
+}
+
+#discard-slot {
+  border: 1px solid brown;
+  border-radius: 10px;
+}
