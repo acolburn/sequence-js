@@ -105,73 +105,119 @@ const boardCardOrder = [
 
 let overlayImage = "";
 
-const board = document.getElementById("board");
-const deckSlot = document.getElementById("deck-slot");
-const discardSlot = document.getElementById("discard-slot");
+// saves cell overlay image states (none, blue chip, or green chip)
+const boardState = new Array(boardCardOrder.length).fill("none");
+const board = document.getElementById("board"); // 10x10 grid
+const deckSlot = document.getElementById("deck-slot"); // deck location
+const discardSlot = document.getElementById("discard-slot"); // discard pile location
+let deckId;
 
-// Helper function to find card by cards.code value
+// Utility Function to Create and Configure DOM Elements
+const createElement = (type, className, styleProps = {}, attributes = {}) => {
+  const elem = document.createElement(type);
+  if (className) elem.classList.add(className);
+  Object.assign(elem.style, styleProps);
+  Object.entries(attributes).forEach(([key, value]) => {
+    elem.setAttribute(key, value);
+  });
+  return elem;
+};
+
+async function makeDeck() {
+  const response = await fetch("https://deckofcardsapi.com/api/deck/new/");
+  const data = await response.json();
+  deckId = data.deck_id;
+}
+
+// Helper function to find card by cards.code value (see cards.js)
 const findCardByCode = (code) => cards.find((card) => card.code === code);
-// const with path to card back image
 const cardBackImage = findCardByCode("BK").image;
 
-// creates playing board; each cell displays card image
-// clicking cell/card image toggles overlay image, e.g., colored chip
-function displayCards() {
-  board.innerHTML = ""; // Clear any existing cards
-
-  boardCardOrder.forEach((code) => {
+// Creates playing board; each cell displays card image
+function makeBoard() {
+  board.innerHTML = "";
+  boardCardOrder.forEach((code, index) => {
     const card = findCardByCode(code);
     if (card) {
-      const cardDiv = document.createElement("div");
-      cardDiv.classList.add("card");
-      cardDiv.style.backgroundImage = `url(${card.image})`;
-      // Create the overlay
-      const overlay = document.createElement("img");
-      overlay.src = overlayImage; // Set the path to your overlay image
-      overlay.classList.add("overlay");
+      const cardDiv = createElement("div", "card", {
+        backgroundImage: `url(${card.image})`,
+      });
+      const overlay = createElement(
+        "img",
+        "overlay",
+        {},
+        { src: overlayImage, style: "visibility: hidden;" },
+      );
       cardDiv.appendChild(overlay);
       board.appendChild(cardDiv);
 
       // Add click event to toggle the overlay
-      cardDiv.addEventListener("click", () => {
-        overlay.style.visibility =
-          overlay.style.visibility === "visible" ? "hidden" : "visible";
-      });
+      cardDiv.addEventListener("click", () => toggleOverlay(overlay, index));
     }
   });
 }
 
-// playerHand is array with cards in player's hand
-// imagePath assigns blue or green check mark
-// method overlays check mark over each square corresponding with a card in player's hand
-const highlightCards = (playerHand, imagePath) => {
+// Save the current board state
+function saveBoardState() {
+  const stateToSave = boardState.map((overlay) => overlay || "none");
+  console.log("Saving board state:", stateToSave);
+}
+
+// Toggle overlay visibility and update board state
+function toggleOverlay(overlay, index) {
+  if (overlay.style.visibility === "visible") {
+    overlay.style.visibility = "hidden";
+    boardState[index] = "none";
+  } else {
+    overlay.style.visibility = "visible";
+    boardState[index] = overlayImage.includes("chipBlue") ? "blue" : "green";
+  }
+  saveBoardState(); // Save board state after every click
+}
+
+// Highlight cards in player's hand
+const highlightCards = (playerHand) => {
+  const imagePath =
+    player === "blue"
+      ? "./images/blue_check_mark_small.png"
+      : "./images/green_check_mark_small.png";
+
   const boardCards = board.querySelectorAll(".card");
 
   boardCards.forEach((cardDiv) => {
-    // Get the code of the card based on the background image
-    const cardCode = cardDiv.style.backgroundImage.match(/\/([^\/]+)\.png/)[1]; // Extracts '2D', '4S', etc.
+    const cardCodeMatch =
+      cardDiv.style.backgroundImage.match(/\/([^\/]+)\.png/);
 
-    if (playerHand.includes(cardCode)) {
-      const overlay = document.createElement("img");
-      overlay.src = imagePath; // Set the path to the overlay image
-      overlay.classList.add("overlay");
-      overlay.style.visibility = "visible"; // Show overlay
-      cardDiv.appendChild(overlay);
+    if (cardCodeMatch) {
+      const cardCode = cardCodeMatch[1];
+      let overlay = cardDiv.querySelector(".checkmark-overlay");
+
+      // Create overlay if it doesn't already exist
+      if (!overlay) {
+        overlay = createElement(
+          "img",
+          "checkmark-overlay",
+          { visibility: "hidden" },
+          { src: imagePath },
+        );
+        cardDiv.appendChild(overlay);
+      }
+
+      // Update overlay visibility
+      overlay.style.visibility = playerHand.includes(cardCode)
+        ? "visible"
+        : "hidden";
     }
   });
 };
 
-// imagePath corresponds to overlay image
-// method clears [imagePath] overlay images from playing board
+// Remove overlays of a specific image from the board
 const removeCardOverlays = (imagePath) => {
-  const boardCards = document.querySelectorAll("#board .card"); // Ensure it targets only board cards
-  const absoluteImagePath = new URL(imagePath, window.location.href).href; // Convert to absolute URL
+  const boardCards = document.querySelectorAll("#board .card");
+  const absoluteImagePath = new URL(imagePath, window.location.href).href;
 
   boardCards.forEach((cardDiv) => {
-    // Find overlay images that match the provided image path
-    const overlays = cardDiv.querySelectorAll(".overlay");
-    overlays.forEach((overlay) => {
-      // Check if the overlay source matches
+    cardDiv.querySelectorAll(".overlay").forEach((overlay) => {
       if (overlay.src === absoluteImagePath) {
         cardDiv.removeChild(overlay);
       }
@@ -179,94 +225,106 @@ const removeCardOverlays = (imagePath) => {
   });
 };
 
-// playerHand is an array with card.codes for a player's hand
-// method displays player's hand in #hand-display element
-const displayPlayerCards = (playerHand) => {
-  const cardDisplay = document.getElementById("hand-display");
-  cardDisplay.innerHTML = ""; // Clear existing displayed cards
+// Display player's hand in the UI
+const makePlayerHand = (playerHand) => {
+  const handDisplay = document.getElementById("hand-display");
+  handDisplay.style.background = player === "blue" ? "lightblue" : "lightgreen";
+  handDisplay.innerHTML = "";
 
   playerHand.forEach((code) => {
-    const card = findCardByCode(code); // Find the card object based on the code
+    const card = findCardByCode(code);
     if (card) {
-      const cardDiv = document.createElement("div");
-      cardDiv.classList.add("card");
-      cardDiv.style.backgroundImage = `url(${card.image})`;
-      // Add click event listener to the div with the card image
-      // When clicked, display the card in the discard pile
-      // and display a blank card in the player hand where the clicked card used to be
-      cardDiv.addEventListener("click", function () {
-        console.log(`${card.code} Image clicked!`); // Replace with your desired functionality
-        const clickedCard = findCardByCode(card.code);
-        if (clickedCard) {
-          const discardImg = document.createElement("img"); // Create an img element
-          discardImg.src = clickedCard.image; // Set the image source
-          discardImg.style.width = "100%"; // Adjust width
-          discardImg.style.height = "auto"; // Maintain aspect ratio
-          discardImg.style.border = "2px solid red"; // Optional: add border for visibility
-
-          // Clear previous contents and append the new image to the discard slot
-          discardSlot.innerHTML = ""; // Clear previous images
-          discardSlot.appendChild(discardImg); // Append the new image
-          // remove card from playerHand & re-displayPlayerCards
-          const index = playerHand.indexOf(card.code);
-          if (index != -1) {
-            playerHand.splice(index, 1);
-            displayPlayerCards(playerHand);
-          }
-        }
+      const cardDiv = createElement("div", "card", {
+        backgroundImage: `url(${card.image})`,
       });
-      cardDisplay.appendChild(cardDiv);
+      cardDiv.addEventListener("click", () =>
+        handleCardClick(card, playerHand),
+      );
+      handDisplay.appendChild(cardDiv);
     }
   });
+  // update board to reflect new hand
+  highlightCards(playerHand);
 };
 
-// method adds image(s) to side container
-// one image denotes the deck
-// other image denotes discard pile
+// Handle individual card click to update status
+function handleCardClick(card, playerHand) {
+  //   console.log(`${card.code} Image clicked!`);
+  const discardImg = createElement(
+    "img",
+    null,
+    { width: "100%", height: "auto", border: "2px solid red" },
+    { src: card.image },
+  );
+  discardSlot.innerHTML = "";
+  discardSlot.appendChild(discardImg);
+
+  const index = playerHand.indexOf(card.code);
+  if (index !== -1) {
+    playerHand.splice(index, 1);
+    makePlayerHand(playerHand);
+  }
+}
+
+// Add images to side container
 function addSideContainer() {
-  // Clear existing images (if necessary)
   deckSlot.innerHTML = "";
   discardSlot.innerHTML = "";
 
-  // intialize deck slot image
-  const img = document.createElement("img");
-  img.src = cardBackImage;
-  img.style.width = "100%";
-  img.style.height = "auto";
-
-  // Add click event listener to the image
-  img.addEventListener("click", function () {
-    console.log("Image clicked!"); // Replace with desired functionality
+  const deckImg = createElement(
+    "img",
+    null,
+    { width: "100%", height: "auto" },
+    { src: cardBackImage },
+  );
+  deckImg.addEventListener("click", () => {
+    console.log("Deck Image clicked!");
+    fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data.cards[0].code);
+        player1Hand.push(data.cards[0].code);
+        console.log(player1Hand);
+        makePlayerHand(player1Hand);
+        highlightCards(player1Hand);
+      });
   });
 
-  // Append the image to the deck slot
-  deckSlot.appendChild(img);
+  deckSlot.appendChild(deckImg);
 
-  // initialize discard slot image
-  const img2 = document.createElement("img");
-  img2.src = "./images/Blank-Playing-Card.png";
-  img2.style.width = "100%";
-  img2.style.height = "auto";
-
-  // Add click event listener to the image
-  img2.addEventListener("click", function () {
-    console.log("Image clicked!"); // Replace with desired functionality
-  });
-
-  // Append the image to the discard slot
-  discardSlot.appendChild(img2);
+  const discardImg = createElement(
+    "img",
+    null,
+    { width: "100%", height: "auto" },
+    { src: "./images/Blank-Playing-Card.png" },
+  );
+  discardImg.addEventListener("click", () =>
+    console.log("Discard Image clicked!"),
+  );
+  discardSlot.appendChild(discardImg);
 }
 
 // Example usage
 
-overlayImage = "./images/chipBlue_border_small.png";
+await makeDeck();
+// console.log(deckId);
+
+let player = "green";
+
+overlayImage =
+  player === "blue"
+    ? "./images/chipBlue_border_small.png"
+    : "./images/chipGreen_border_small.png";
+// hand background color determined by player = "blue" or not "blue"
+
 // Call the function to display cards
-displayCards();
+makeBoard();
 
 // sample player hand, blue player
 let player1Hand = ["2D", "3D", "4D", "AC", "2C", "QH", "JD"];
-displayPlayerCards(player1Hand);
-highlightCards(player1Hand, "./images/blue_check_mark_small.png");
+makePlayerHand(player1Hand);
+highlightCards(player1Hand);
 
 // removeCardOverlays("./images/blue_check_mark_small.png");
 addSideContainer();
+// console.log(overlayImage);

@@ -24,9 +24,12 @@ body {
   background-position: center;
   max-width: 150px;
   height: auto; /* Allow height to adjust dynamically */
+  border: 1px solid #333;
+  border-radius: 5px;
 }
 
-.overlay {
+.overlay,
+.checkmark-overlay {
   position: absolute;
   top: 32%;
   left: 38%;
@@ -35,10 +38,11 @@ body {
   visibility: hidden;
 }
 
-.hand-display {
+#hand-display {
   display: flex;
   gap: 10px;
-  border: 2px solid #333; /* 2px border around the div */
+  /* border: 10px solid lightblue; */
+  /* background: lightblue; */
   padding: 10px 0 10px 10px; /* Padding around the cards */
   margin-top: 20px; /* Space from the board */
   width: 100%;
