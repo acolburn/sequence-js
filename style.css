@@ -2,55 +2,69 @@
   box-sizing: border-box;
 }
 
+html,
 body {
-  display: flex;
+  height: 100%;
   margin: 0;
-  /* height: 100vh; */
 }
 
-.card-grid {
+body {
+  display: flex;
+  height: 100vh;
+}
+
+.playing-board {
+  flex-grow: 1;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-gap: 10px;
   /* max-width: 800px;  */
-  width: 100%; /* Full-width for responsiveness */
+  width: 100%;
   margin: 0 auto; /* Center the grid */
 }
 
 .card {
   position: relative;
+  width: 100%;
   aspect-ratio: 226/314;
   background-size: cover;
   background-position: center;
-  max-width: 150px;
-  height: auto; /* Allow height to adjust dynamically */
+  /* max-width: 150px; */
+  /* height: auto; */
+
   border: 1px solid #333;
   border-radius: 5px;
 }
 
-.overlay,
-.checkmark-overlay {
+.overlay {
   position: absolute;
   top: 32%;
-  left: 38%;
-  width: 40%; /* width and height are image size */
-  height: 25%;
+  left: 28%;
+  width: 55%; /* width and height are image size */
+  height: 38%;
+  visibility: hidden;
+}
+
+.checkmark-overlay {
+  position: absolute;
+  top: 12%;
+  left: 10%;
+  width: 50%; /* width and height are image size */
+  height: 35%;
   visibility: hidden;
 }
 
 #hand-display {
   display: flex;
   gap: 10px;
-  /* border: 10px solid lightblue; */
-  /* background: lightblue; */
   padding: 10px 0 10px 10px; /* Padding around the cards */
   margin-top: 20px; /* Space from the board */
   width: 100%;
 }
 
-.hand-display .card {
-  height: 10vh;
+.hand-display > .card {
   max-width: 100px;
+  width: 10%;
 }
 
 #side-container {
@@ -66,9 +80,10 @@ body {
 
 #game-container {
   flex-grow: 1; /* Allow the game container to take up remaining space */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  /* border: 2px solid red;  */
+  border: 2px solid red;
   justify-content: flex-start; /* Start stacking items from the start */
 }
 
