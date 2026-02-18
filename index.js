@@ -1,4 +1,5 @@
 import { cards } from "./cards.js";
+import { sayHello } from "./firestore.js";
 
 const boardCardOrder = [
   "BK",
@@ -113,6 +114,7 @@ const boardState = new Array(boardCardOrder.length).fill("none");
 const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
+const btnEndTurn = document.getElementById("end-turn");
 let deckId;
 
 // Utility Function to Create and Configure DOM Elements
@@ -177,8 +179,8 @@ function saveBoardState() {
   console.log("Saving board state:", stateToSave);
 }
 
-// updates the board according to boardState ... displays the blue and green chips
-// called after player clicks a cell (toggle Overlay) and when switching players
+// updates the board (from boardState) to display the blue and green chips
+// called after player clicks a cell (toggle Overlay, add chip to cell) and when switching players
 function updateBoardOverlays() {
   const boardCards = board.querySelectorAll(".card"); // Select all card cells on the board
 
@@ -207,6 +209,7 @@ function toggleOverlay(overlay, index) {
     boardState[index] = "none";
   } else {
     overlay.style.visibility = "visible";
+
     boardState[index] = overlayImage.includes("chipBlue") ? "blue" : "green";
   }
   saveBoardState(); // Save board state after every click
@@ -284,7 +287,6 @@ const makePlayerHand = (playerHand) => {
 };
 
 // Handle individual card click to update status
-// This event ends player's turn
 // Turn ends when player discards
 function handleCardClick(card, playerHand) {
   //   console.log(`${card.code} Image clicked!`);
@@ -302,15 +304,15 @@ function handleCardClick(card, playerHand) {
     playerHand.splice(index, 1);
     makePlayerHand(playerHand);
   }
-
-  console.log(`${currentPlayer} turn has ended.`);
-  switchPlayers();
 }
 
 // Switch player function
 function switchPlayers() {
   // Toggle player
   currentPlayer = currentPlayer === "blue" ? "green" : "blue";
+  // color button to match player
+  document.getElementById("end-turn").style.background =
+    currentPlayer == "blue" ? "lightblue" : "lightgreen";
 
   // Update overlay image based on the current player
   overlayImage =
@@ -331,10 +333,15 @@ function switchPlayers() {
   console.log(`It's now ${currentPlayer}'s turn with hand:`, currentPlayerHand);
 }
 
+btnEndTurn.addEventListener("click", () => switchPlayers());
+
 // Add images to side container
 function addSideContainer() {
   deckSlot.innerHTML = "";
   discardSlot.innerHTML = "";
+  // color button to match initial player
+  document.getElementById("end-turn").style.background =
+    currentPlayer == "blue" ? "lightblue" : "lightgreen";
 
   const deckImg = createElement(
     "img",
@@ -376,96 +383,36 @@ async function newGame() {
   await makeDeck();
   makeBoard();
 
-  // It looks bad, but it's the only way I could figure out how to do this, highlightCards() properly, and not throw Promise-related errors
-  // make the blue player hand
-  let playerHand = bluePlayerHand;
-  let res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  let data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
+  let res;
+  let data;
+  let playerHand = bluePlayerHand; // playerHand local var for this method; currentPlayer is the global var
+  for (let i = 0; i < 7; i++) {
+    res = await fetch(
+      `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
+    );
+    data = await res.json();
+    playerHand.push(data.cards[0].code);
+  }
+  currentPlayer = "blue"; // blue goes first
+  makePlayerHand(playerHand); // display blue hand
+  // Update overlay image based on the current player
+  overlayImage =
+    currentPlayer === "blue"
+      ? "./images/chipBlue_border_small.png"
+      : "./images/chipGreen_border_small.png";
 
   // make the green player hand
   playerHand = greenPlayerHand;
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
-  res = await fetch(
-    `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
-  );
-  data = await res.json();
-  playerHand.push(data.cards[0].code);
-  makePlayerHand(playerHand);
+
+  for (let i = 0; i < 7; i++) {
+    res = await fetch(
+      `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
+    );
+    data = await res.json();
+    playerHand.push(data.cards[0].code);
+  }
+  // makePlayerHand(playerHand); ... make green hand, but don't display it yet
+
   addSideContainer();
 }
 

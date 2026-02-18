@@ -92,7 +92,7 @@ export const cards = [
   },
   {
     code: "AD",
-    image: "https://deckofcardsapi.com/static/img/aceDiamonds.png",
+    image: "https://deckofcardsapi.com/static/img/AD.png",
 
     value: "ACE",
     suit: "DIAMONDS",
