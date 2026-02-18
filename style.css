@@ -78,7 +78,7 @@ body {
 
 #game-container {
   flex-grow: 1;
-  height: 100vh;
+  /* height: 100vh; */
   display: flex;
   flex-direction: column;
   border: 2px solid red;
