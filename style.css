@@ -62,7 +62,7 @@ body {
   width: 100%;
 }
 
-.hand-display > .card {
+.hand-display .card {
   max-width: 100px;
   width: 10%;
 }
