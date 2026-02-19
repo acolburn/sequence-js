@@ -69,8 +69,12 @@ const initializeGameListener = () => {
   onValue(
     gameInDB,
     (snapshot) => {
-      const gameData = snapshot.val();
-      console.log("Game data retrieved:", gameData);
+      return snapshot.val();
+      //   const gameData = snapshot.val();
+      //   console.log("bluePlayerHand:", gameData.bluePlayerHand);
+      //   console.log("greenPlayerHand:", gameData.greenPlayerHand);
+      //   console.log("currentPlayer:", gameData.currentPlayer);
+      //   console.log("deckId:", gameData.deckId);
     },
     (error) => {
       console.error("Error retrieving game data:", error);

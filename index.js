@@ -352,8 +352,41 @@ async function newGame() {
 
 // Example usage
 
-// await newGame();
-initializeGameListener();
+let gameState = initializeGameListener();
+if (
+  typeof gameState !== "undefined" &&
+  typeof gameState.bluePlayerHand !== "undefined"
+) {
+  gameState.bluePlayerHand !== bluePlayerHand &&
+    (bluePlayerHand = gameState.bluePlayerHand);
+}
+if (
+  typeof gameState !== "undefined" &&
+  typeof gameState.greenPlayerHand !== "undefined"
+) {
+  gameState.greenPlayerHand !== greenPlayerHand &&
+    (greenPlayerHand = gameState.greenPlayerHand);
+}
+if (
+  typeof gameState !== "undefined" &&
+  typeof gameState.boardState !== "undefined"
+) {
+  gameState.boardState !== boardState && (boardState = gameState.boardState);
+}
+if (
+  typeof gameState !== "undefined" &&
+  typeof gameState.currentPlayer !== "undefined"
+) {
+  gameState.currentPlayer !== currentPlayer &&
+    (currentPlayer = gameState.currentPlayer);
+}
+if (
+  typeof gameState !== "undefined" &&
+  typeof gameState.deckId !== "undefined"
+) {
+  gameState.deckId !== deckId && (deckId = gameState.deckId);
+}
+
 // updateCurrentPlayer("green");
 // updateDeckId(deckId);
 // updateGreenPlayerHand(greenPlayerHand);
