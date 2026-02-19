@@ -1,108 +1,14 @@
 import { cards } from "./cards.js";
-import { sayHello } from "./firestore.js";
-
-const boardCardOrder = [
-  "BK",
-  "2S",
-  "3S",
-  "4S",
-  "5S",
-  "6S",
-  "7S",
-  "8S",
-  "9S",
-  "BK",
-  "6C",
-  "5C",
-  "4C",
-  "3C",
-  "2C",
-  "AH",
-  "KH",
-  "QH",
-  "0H",
-  "0S",
-  "7C",
-  "AS",
-  "2D",
-  "3D",
-  "4D",
-  "5D",
-  "6D",
-  "7D",
-  "9H",
-  "QS",
-  "8C",
-  "KS",
-  "6C",
-  "5C",
-  "4C",
-  "3C",
-  "2C",
-  "8D",
-  "8H",
-  "KS",
-  "9C",
-  "QS",
-  "7C",
-  "6H",
-  "5H",
-  "4H",
-  "AH",
-  "9D",
-  "7H",
-  "AS",
-  "0C",
-  "0S",
-  "8C",
-  "7H",
-  "2H",
-  "3H",
-  "KH",
-  "0D",
-  "6H",
-  "2D",
-  "QC",
-  "9S",
-  "9C",
-  "8H",
-  "9H",
-  "0H",
-  "QH",
-  "QD",
-  "5H",
-  "3D",
-  "KC",
-  "8S",
-  "0C",
-  "QC",
-  "KC",
-  "AC",
-  "AD",
-  "KD",
-  "4H",
-  "4D",
-  "AC",
-  "7S",
-  "6S",
-  "5S",
-  "4S",
-  "3S",
-  "2S",
-  "2H",
-  "3H",
-  "5D",
-  "BK",
-  "AD",
-  "KD",
-  "QD",
-  "0D",
-  "9D",
-  "8D",
-  "7D",
-  "6D",
-  "BK",
-];
+import {
+  database,
+  updateCurrentPlayer,
+  updateDeckId,
+  updateGreenPlayerHand,
+  updateBluePlayerHand,
+  updateBoardState,
+  initializeGameListener,
+} from "./firestore.js";
+import { boardCardOrder } from "./gameboard.js";
 
 let overlayImage = "";
 let currentPlayer = "blue"; // Starting player
@@ -115,6 +21,7 @@ const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
 const btnEndTurn = document.getElementById("end-turn");
+const btnNewGame = document.getElementById("new-game");
 let deckId;
 
 // Utility Function to Create and Configure DOM Elements
@@ -135,6 +42,8 @@ async function makeDeck() {
   );
   const data = await response.json();
   deckId = data.deck_id;
+  // update database
+  updateDeckId(deckId);
 }
 
 // Helper function to find card by cards.code value (see cards.js)
@@ -160,13 +69,15 @@ function makeBoard() {
         "overlay",
         {},
         { src: overlayImage, style: "visibility: hidden;" },
-        // TODO overlayImage can be blue or green ...
       );
       cardDiv.appendChild(overlay);
       board.appendChild(cardDiv);
 
       // Add click event to toggle the overlay; if it's hidden make it visible when clicked & visa-versa
       cardDiv.addEventListener("click", () => toggleOverlay(overlay, index));
+
+      // update database with blank board state
+      updateBoardState(boardState);
     }
   });
 }
@@ -175,8 +86,7 @@ function makeBoard() {
 function saveBoardState() {
   // make an array corresponding to each cell. Items will be either "blue","green", or "none"
   const stateToSave = boardState.map((overlay) => overlay || "none");
-  // TODO push board state array to server
-  console.log("Saving board state:", stateToSave);
+  updateBoardState(stateToSave);
 }
 
 // updates the board (from boardState) to display the blue and green chips
@@ -284,6 +194,10 @@ const makePlayerHand = (playerHand) => {
 
   // update board to reflect new hand
   highlightCards(playerHand);
+  // update database
+  playerHand == bluePlayerHand
+    ? updateBluePlayerHand(playerHand)
+    : updateGreenPlayerHand(playerHand);
 };
 
 // Handle individual card click to update status
@@ -304,7 +218,13 @@ function handleCardClick(card, playerHand) {
     playerHand.splice(index, 1);
     makePlayerHand(playerHand);
   }
+  // update database
+  playerHand == bluePlayerHand
+    ? updateBluePlayerHand(playerHand)
+    : updateGreenPlayerHand(playerHand);
 }
+
+btnEndTurn.addEventListener("click", () => switchPlayers());
 
 // Switch player function
 function switchPlayers() {
@@ -328,12 +248,17 @@ function switchPlayers() {
     currentPlayer === "blue" ? bluePlayerHand : greenPlayerHand;
   makePlayerHand(currentPlayerHand);
   highlightCards(currentPlayerHand);
+  // update database
+  currentPlayer == "blue"
+    ? updateCurrentPlayer("blue")
+    : updateCurrentPlayer("green");
+  currentPlayer == "blue"
+    ? updateBluePlayerHand(currentPlayerHand)
+    : updateGreenPlayerHand(currentPlayerHand);
 
   // Optionally log the player's turn for debugging
-  console.log(`It's now ${currentPlayer}'s turn with hand:`, currentPlayerHand);
+  // console.log(`It's now ${currentPlayer}'s turn with hand:`, currentPlayerHand);
 }
-
-btnEndTurn.addEventListener("click", () => switchPlayers());
 
 // Add images to side container
 function addSideContainer() {
@@ -379,12 +304,20 @@ function addSideContainer() {
   discardSlot.appendChild(discardImg);
 }
 
+btnNewGame.addEventListener("click", async function () {
+  await newGame();
+});
+
 async function newGame() {
   await makeDeck();
   makeBoard();
+  // clear hands
+  bluePlayerHand.length = 0;
+  greenPlayerHand.length = 0;
 
   let res;
   let data;
+
   let playerHand = bluePlayerHand; // playerHand local var for this method; currentPlayer is the global var
   for (let i = 0; i < 7; i++) {
     res = await fetch(
@@ -394,6 +327,7 @@ async function newGame() {
     playerHand.push(data.cards[0].code);
   }
   currentPlayer = "blue"; // blue goes first
+  updateCurrentPlayer("blue");
   makePlayerHand(playerHand); // display blue hand
   // Update overlay image based on the current player
   overlayImage =
@@ -417,23 +351,11 @@ async function newGame() {
 }
 
 // Example usage
-newGame();
 
-// await makeDeck();
-
-// overlayImage =
-//   currentPlayer === "blue"
-//     ? "./images/chipBlue_border_small.png"
-//     : "./images/chipGreen_border_small.png";
-// // hand background color determined by player = "blue" or not "blue"
-
-// // Call the function to display cards
-// makeBoard();
-
-// // sample player hand, blue player
-// let currentPlayerHand =
-//   currentPlayer == "blue" ? bluePlayerHand : greenPlayerHand;
-// makePlayerHand(currentPlayerHand);
-// highlightCards(currentPlayerHand);
-
-// addSideContainer();
+await newGame();
+initializeGameListener();
+// updateCurrentPlayer("green");
+// updateDeckId(deckId);
+// updateGreenPlayerHand(greenPlayerHand);
+// updateBluePlayerHand(bluePlayerHand);
+// updateBoardState(boardState);
