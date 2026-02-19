@@ -352,7 +352,7 @@ async function newGame() {
 
 // Example usage
 
-await newGame();
+// await newGame();
 initializeGameListener();
 // updateCurrentPlayer("green");
 // updateDeckId(deckId);
