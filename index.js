@@ -11,7 +11,7 @@ import {
 import { boardCardOrder } from "./gameboard.js";
 
 let overlayImage = "";
-let currentPlayer = "blue"; // Starting player
+let currentPlayer; // Starting player
 let bluePlayerHand = []; // Blue player's hand
 let greenPlayerHand = []; // Green player's hand
 
@@ -78,6 +78,7 @@ function makeBoard() {
 
       // clear board & update database with blank board state
       boardState = new Array(boardCardOrder.length).fill("none");
+      // update database
       updateBoardState(boardState);
     }
   });
@@ -87,6 +88,7 @@ function makeBoard() {
 function saveBoardState() {
   // make an array corresponding to each cell. Items will be either "blue","green", or "none"
   const stateToSave = boardState.map((overlay) => overlay || "none");
+  // update database
   updateBoardState(stateToSave);
 }
 
@@ -121,13 +123,14 @@ function toggleOverlay(overlay, index) {
   } else {
     overlay.style.visibility = "visible";
 
-    boardState[index] = overlayImage.includes("chipBlue") ? "blue" : "green";
+    boardState[index] =
+      overlayImage === "./images/chipBlue_border_small.png" ? "blue" : "green";
   }
-  saveBoardState(); // Save board state after every click
-  updateBoardOverlays(); // Update the board visuals
+  saveBoardState(); // Save board state & update database after every click
+  // updateBoardOverlays(); // Update the board visuals
 }
 
-// Highlight cards in player's hand
+// Highlight on playing board the cards in player's hand
 const highlightCards = (playerHand) => {
   const imagePath = "./images/blue_check_mark.png";
 
@@ -161,18 +164,18 @@ const highlightCards = (playerHand) => {
 };
 
 // Remove overlays of a specific image from the board
-const removeCardOverlays = (imagePath) => {
-  const boardCards = document.querySelectorAll("#board .card");
-  const absoluteImagePath = new URL(imagePath, window.location.href).href;
+// const removeCardOverlays = (imagePath) => {
+//   const boardCards = document.querySelectorAll("#board .card");
+//   const absoluteImagePath = new URL(imagePath, window.location.href).href;
 
-  boardCards.forEach((cardDiv) => {
-    cardDiv.querySelectorAll(".overlay").forEach((overlay) => {
-      if (overlay.src === absoluteImagePath) {
-        cardDiv.removeChild(overlay);
-      }
-    });
-  });
-};
+//   boardCards.forEach((cardDiv) => {
+//     cardDiv.querySelectorAll(".overlay").forEach((overlay) => {
+//       if (overlay.src === absoluteImagePath) {
+//         cardDiv.removeChild(overlay);
+//       }
+//     });
+//   });
+// };
 
 // Display player's hand in the UI
 const makePlayerHand = (playerHand) => {
@@ -196,15 +199,15 @@ const makePlayerHand = (playerHand) => {
   // update board to reflect new hand
   highlightCards(playerHand);
   // update database
-  currentPlayer === "blue"
-    ? updateBluePlayerHand(playerHand)
-    : updateGreenPlayerHand(playerHand);
+  // currentPlayer === "blue"
+  // ? updateBluePlayerHand(playerHand)
+  // : updateGreenPlayerHand(playerHand);
 };
 
 // Handle individual card click to update status
 
 function handleCardClick(card, playerHand) {
-  //   console.log(`${card.code} Image clicked!`);
+  console.log(`${card.code} Image clicked!`);
   const discardImg = createElement(
     "img",
     null,
@@ -220,9 +223,9 @@ function handleCardClick(card, playerHand) {
     makePlayerHand(playerHand);
   }
   // update database
-  // console.log(
-  //   `When handleCardClick was clicked, currentPlayer was ${currentPlayer}`,
-  // );
+  console.log(
+    `When handleCardClick was clicked, currentPlayer was ${currentPlayer}`,
+  );
   currentPlayer === "blue"
     ? updateBluePlayerHand(playerHand)
     : updateGreenPlayerHand(playerHand);
@@ -232,36 +235,38 @@ btnEndTurn.addEventListener("click", () => switchPlayers());
 
 // Switch player function
 function switchPlayers() {
-  // Toggle player
-  currentPlayer = currentPlayer === "blue" ? "green" : "blue";
-  // color button to match player
-  document.getElementById("end-turn").style.background =
-    currentPlayer == "blue" ? "lightblue" : "lightgreen";
+  // Toggle player logic using the currentPlayer variable
+  let newCurrentPlayer = "";
+  if (currentPlayer === "blue") {
+    newCurrentPlayer = "green";
+  } else {
+    newCurrentPlayer = "blue";
+  }
 
   // Update overlay image based on the current player
   overlayImage =
-    currentPlayer === "blue"
+    newCurrentPlayer === "blue"
       ? "./images/chipBlue_border_small.png"
       : "./images/chipGreen_border_small.png";
 
-  // Update board overlays
-  updateBoardOverlays();
+  // Update the UI
+  btnEndTurn.style.background =
+    newCurrentPlayer === "blue" ? "lightblue" : "lightgreen";
 
-  // Update the player hand display
-  let currentPlayerHand =
-    currentPlayer === "blue" ? bluePlayerHand : greenPlayerHand;
-  makePlayerHand(currentPlayerHand);
-  highlightCards(currentPlayerHand);
-  // update database
-  currentPlayer == "blue"
-    ? updateCurrentPlayer("blue")
-    : updateCurrentPlayer("green");
-  currentPlayer == "blue"
-    ? updateBluePlayerHand(currentPlayerHand)
-    : updateGreenPlayerHand(currentPlayerHand);
+  // Update board overlays and player hands
+  // updateBoardOverlays(); // is this necessary?
 
-  // Optionally log the player's turn for debugging
-  // console.log(`It's now ${currentPlayer}'s turn with hand:`, currentPlayerHand);
+  // Update database and UI
+
+  if (newCurrentPlayer === "blue") {
+    updateCurrentPlayer("blue");
+    makePlayerHand(bluePlayerHand);
+    highlightCards(bluePlayerHand);
+  } else {
+    updateCurrentPlayer("green");
+    makePlayerHand(greenPlayerHand);
+    highlightCards(greenPlayerHand);
+  }
 }
 
 // Add images to side container
@@ -281,16 +286,18 @@ function addSideContainer() {
   // Event handler for clicking deck
   deckImg.addEventListener("click", () => {
     // console.log("Deck Image clicked!")
-    const playerHand =
-      currentPlayer == "blue" ? bluePlayerHand : greenPlayerHand;
+    // const playerHand =
+    //   currentPlayer == "blue" ? bluePlayerHand : greenPlayerHand;
     fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`)
       .then((res) => res.json())
       .then((data) => {
-        console.log(data.cards[0].code);
-        playerHand.push(data.cards[0].code);
-        // console.log(playerHand);
-        makePlayerHand(playerHand);
-        // highlightCards(playerHand);
+        if (currentPlayer == "blue") {
+          bluePlayerHand.push(data.cards[0].code);
+          updateBluePlayerHand(bluePlayerHand);
+        } else {
+          greenPlayerHand.push(data.cards[0].code);
+          updateGreenPlayerHand(greenPlayerHand);
+        }
       });
   });
 
@@ -321,66 +328,134 @@ async function newGame() {
   greenPlayerHand.length = 0;
   updateGreenPlayerHand(greenPlayerHand);
 
+  currentPlayer = "blue"; // Set initial currentPlayer
+  updateCurrentPlayer(currentPlayer); // blue goes first
+  // Set the overlayImage based on the current player
+  overlayImage = "./images/chipBlue_border_small.png";
+  updateBoardOverlays(); //is this necessary?
+
   let res;
   let data;
-
-  let playerHand = bluePlayerHand; // playerHand local var for this method; currentPlayer is the global var
   for (let i = 0; i < 7; i++) {
     res = await fetch(
       `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
     );
     data = await res.json();
-    playerHand.push(data.cards[0].code);
+    bluePlayerHand.push(data.cards[0].code);
   }
-  currentPlayer = "blue"; // blue goes first
-  updateCurrentPlayer("blue");
-  makePlayerHand(playerHand); // display blue hand
-  // Update overlay image based on the current player
-  overlayImage =
-    currentPlayer === "blue"
-      ? "./images/chipBlue_border_small.png"
-      : "./images/chipGreen_border_small.png";
+  makePlayerHand(bluePlayerHand); // display blue hand;
+  updateBluePlayerHand(bluePlayerHand);
 
-  // make the green player hand
-  playerHand = greenPlayerHand;
-
+  // make the green player hand, don't display it yet
   for (let i = 0; i < 7; i++) {
     res = await fetch(
       `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
     );
     data = await res.json();
-    playerHand.push(data.cards[0].code);
+    greenPlayerHand.push(data.cards[0].code);
   }
-  // makePlayerHand(playerHand); ... make green hand, but don't display it yet
-  updateGreenPlayerHand(playerHand);
-
+  updateGreenPlayerHand(greenPlayerHand);
   addSideContainer();
+}
+
+// Display blue player's hand in the UI
+function updateUIForBluePlayerHand() {
+  if (currentPlayer === "blue") {
+    const handDisplay = document.getElementById("hand-display"); // Assuming there's a displaying area for player's hands
+    handDisplay.style.background = "lightblue"; // Set background color for blue player
+    handDisplay.innerHTML = ""; // Clear current display
+
+    bluePlayerHand.forEach((code) => {
+      const card = findCardByCode(code); // Find the card information by code
+      if (card) {
+        const cardDiv = createElement("div", "card", {
+          backgroundImage: `url(${card.image})`, // Set background image of card
+        });
+        cardDiv.addEventListener("click", () =>
+          handleCardClick(card, bluePlayerHand),
+        );
+        handDisplay.appendChild(cardDiv); // Add card to hand display
+      }
+    });
+  }
+}
+
+// Display green player's hand in the UI
+function updateUIForGreenPlayerHand() {
+  if (currentPlayer === "green") {
+    const handDisplay = document.getElementById("hand-display"); // Assuming there's a displaying area for player's hands
+    handDisplay.style.background = "lightgreen"; // Set background color for green player
+    handDisplay.innerHTML = ""; // Clear current display
+
+    greenPlayerHand.forEach((code) => {
+      const card = findCardByCode(code); // Find the card information by code
+      if (card) {
+        const cardDiv = createElement("div", "card", {
+          backgroundImage: `url(${card.image})`, // Set background image of card
+        });
+        cardDiv.addEventListener("click", () =>
+          handleCardClick(card, greenPlayerHand),
+        );
+        handDisplay.appendChild(cardDiv); // Add card to hand display
+      }
+    });
+  }
+}
+
+// Update the visual state of the board based on the boardState
+function updateUIForBoardState() {
+  const boardCards = board.querySelectorAll(".card"); // Select all cards on the board
+
+  boardCards.forEach((cardDiv, index) => {
+    const overlay = cardDiv.querySelector(".overlay"); // Select the overlay for the card
+    const currentState = boardState[index]; // Get current state for this card
+
+    // Determine which image to show based on `boardState`
+    if (currentState === "blue") {
+      overlay.src = "./images/chipBlue_border_small.png"; // Blue chip
+      overlay.style.visibility = "visible"; // Show overlay
+    } else if (currentState === "green") {
+      overlay.src = "./images/chipGreen_border_small.png"; // Green chip
+      overlay.style.visibility = "visible"; // Show overlay
+    } else {
+      overlay.style.visibility = "hidden"; // Hide the overlay if state is none
+    }
+  });
+}
+
+function updateUIForCurrentPlayer() {
+  // Change button color based on current player
+  btnEndTurn.style.background =
+    currentPlayer === "blue" ? "lightblue" : "lightgreen";
 }
 
 // Function to update game values
 const updateGameValues = (gameState) => {
+  // update currentPlayer first, since other decisions made on the basis of its state
+  if (gameState.currentPlayer !== undefined) {
+    if (gameState.currentPlayer !== currentPlayer) {
+      currentPlayer = gameState.currentPlayer;
+      updateUIForCurrentPlayer();
+    }
+  }
   if (gameState.bluePlayerHand !== undefined) {
     if (gameState.bluePlayerHand !== bluePlayerHand) {
       bluePlayerHand = gameState.bluePlayerHand;
-      // updateUIForBluePlayerHand();
+      updateUIForBluePlayerHand();
+      btnEndTurn.style.background =
+        currentPlayer === "blue" ? "lightblue" : "lightgreen"; // confirms currentPlayer value
     }
   }
   if (gameState.greenPlayerHand !== undefined) {
     if (gameState.greenPlayerHand !== greenPlayerHand) {
       greenPlayerHand = gameState.greenPlayerHand;
-      // updateUIForGreenPlayerHand();
+      updateUIForGreenPlayerHand();
     }
   }
   if (gameState.boardState !== undefined) {
     if (gameState.boardState !== boardState) {
       boardState = gameState.boardState;
-      // updateUIForBoardState();
-    }
-  }
-  if (gameState.currentPlayer !== undefined) {
-    if (gameState.currentPlayer !== currentPlayer) {
-      currentPlayer = gameState.currentPlayer;
-      // updateUIForCurrentPlayer();
+      updateUIForBoardState();
     }
   }
   if (gameState.deckId !== undefined) {
@@ -393,7 +468,8 @@ const updateGameValues = (gameState) => {
 export { updateGameValues };
 
 // Example usage
-
+makeBoard();
+addSideContainer();
 initializeGameListener(); // calls updateGameValues
 
 // if (
