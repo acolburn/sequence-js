@@ -1,3 +1,4 @@
+import { updateGameValues } from "./index.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import {
   getDatabase,
@@ -26,9 +27,8 @@ export {
   initializeGameListener,
 };
 
-// function pushValueToDB(inputValue) {
-//   push(gameInDB, inputValue);
-// }
+// Global variable to hold the game state
+let gameState = {};
 
 function updateCurrentPlayer(newPlayer) {
   // Create a reference to the currentPlayer node
@@ -49,11 +49,13 @@ function updateDeckId(deckId) {
 }
 
 function updateGreenPlayerHand(greenPlayerHand) {
+  //   console.log("updating green player hand");
   const deckIdRef = ref(database, "game/greenPlayerHand");
   set(deckIdRef, greenPlayerHand);
 }
 
 function updateBluePlayerHand(bluePlayerHand) {
+  //   console.log("update blue player hand");
   const deckIdRef = ref(database, "game/bluePlayerHand");
   set(deckIdRef, bluePlayerHand);
 }
@@ -69,12 +71,10 @@ const initializeGameListener = () => {
   onValue(
     gameInDB,
     (snapshot) => {
-      return snapshot.val();
-      //   const gameData = snapshot.val();
-      //   console.log("bluePlayerHand:", gameData.bluePlayerHand);
-      //   console.log("greenPlayerHand:", gameData.greenPlayerHand);
-      //   console.log("currentPlayer:", gameData.currentPlayer);
-      //   console.log("deckId:", gameData.deckId);
+      // Update global gameState with the database snapshot
+      gameState = snapshot.val() || {}; // Ensure gameState is not null
+      // Now, call a function to update UI or handle logic
+      updateGameValues(gameState);
     },
     (error) => {
       console.error("Error retrieving game data:", error);

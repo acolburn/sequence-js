@@ -16,7 +16,7 @@ let bluePlayerHand = []; // Blue player's hand
 let greenPlayerHand = []; // Green player's hand
 
 // saves cell overlay image states (none, blue chip, or green chip)
-const boardState = new Array(boardCardOrder.length).fill("none");
+let boardState = new Array(boardCardOrder.length).fill("none");
 const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
@@ -76,7 +76,8 @@ function makeBoard() {
       // Add click event to toggle the overlay; if it's hidden make it visible when clicked & visa-versa
       cardDiv.addEventListener("click", () => toggleOverlay(overlay, index));
 
-      // update database with blank board state
+      // clear board & update database with blank board state
+      boardState = new Array(boardCardOrder.length).fill("none");
       updateBoardState(boardState);
     }
   });
@@ -177,7 +178,7 @@ const removeCardOverlays = (imagePath) => {
 const makePlayerHand = (playerHand) => {
   const handDisplay = document.getElementById("hand-display");
   handDisplay.style.background =
-    playerHand == bluePlayerHand ? "lightblue" : "lightgreen";
+    currentPlayer === "blue" ? "lightblue" : "lightgreen";
   handDisplay.innerHTML = "";
   playerHand.forEach((code) => {
     const card = findCardByCode(code);
@@ -195,13 +196,13 @@ const makePlayerHand = (playerHand) => {
   // update board to reflect new hand
   highlightCards(playerHand);
   // update database
-  playerHand == bluePlayerHand
+  currentPlayer === "blue"
     ? updateBluePlayerHand(playerHand)
     : updateGreenPlayerHand(playerHand);
 };
 
 // Handle individual card click to update status
-// Turn ends when player discards
+
 function handleCardClick(card, playerHand) {
   //   console.log(`${card.code} Image clicked!`);
   const discardImg = createElement(
@@ -219,7 +220,10 @@ function handleCardClick(card, playerHand) {
     makePlayerHand(playerHand);
   }
   // update database
-  playerHand == bluePlayerHand
+  // console.log(
+  //   `When handleCardClick was clicked, currentPlayer was ${currentPlayer}`,
+  // );
+  currentPlayer === "blue"
     ? updateBluePlayerHand(playerHand)
     : updateGreenPlayerHand(playerHand);
 }
@@ -313,7 +317,9 @@ async function newGame() {
   makeBoard();
   // clear hands
   bluePlayerHand.length = 0;
+  updateBluePlayerHand(bluePlayerHand);
   greenPlayerHand.length = 0;
+  updateGreenPlayerHand(greenPlayerHand);
 
   let res;
   let data;
@@ -346,46 +352,83 @@ async function newGame() {
     playerHand.push(data.cards[0].code);
   }
   // makePlayerHand(playerHand); ... make green hand, but don't display it yet
+  updateGreenPlayerHand(playerHand);
 
   addSideContainer();
 }
 
+// Function to update game values
+const updateGameValues = (gameState) => {
+  if (gameState.bluePlayerHand !== undefined) {
+    if (gameState.bluePlayerHand !== bluePlayerHand) {
+      bluePlayerHand = gameState.bluePlayerHand;
+      // updateUIForBluePlayerHand();
+    }
+  }
+  if (gameState.greenPlayerHand !== undefined) {
+    if (gameState.greenPlayerHand !== greenPlayerHand) {
+      greenPlayerHand = gameState.greenPlayerHand;
+      // updateUIForGreenPlayerHand();
+    }
+  }
+  if (gameState.boardState !== undefined) {
+    if (gameState.boardState !== boardState) {
+      boardState = gameState.boardState;
+      // updateUIForBoardState();
+    }
+  }
+  if (gameState.currentPlayer !== undefined) {
+    if (gameState.currentPlayer !== currentPlayer) {
+      currentPlayer = gameState.currentPlayer;
+      // updateUIForCurrentPlayer();
+    }
+  }
+  if (gameState.deckId !== undefined) {
+    if (gameState.deckId !== deckId) {
+      deckId = gameState.deckId;
+      // updateUIForDeckId();
+    }
+  }
+};
+export { updateGameValues };
+
 // Example usage
 
-let gameState = initializeGameListener();
-if (
-  typeof gameState !== "undefined" &&
-  typeof gameState.bluePlayerHand !== "undefined"
-) {
-  gameState.bluePlayerHand !== bluePlayerHand &&
-    (bluePlayerHand = gameState.bluePlayerHand);
-}
-if (
-  typeof gameState !== "undefined" &&
-  typeof gameState.greenPlayerHand !== "undefined"
-) {
-  gameState.greenPlayerHand !== greenPlayerHand &&
-    (greenPlayerHand = gameState.greenPlayerHand);
-}
-if (
-  typeof gameState !== "undefined" &&
-  typeof gameState.boardState !== "undefined"
-) {
-  gameState.boardState !== boardState && (boardState = gameState.boardState);
-}
-if (
-  typeof gameState !== "undefined" &&
-  typeof gameState.currentPlayer !== "undefined"
-) {
-  gameState.currentPlayer !== currentPlayer &&
-    (currentPlayer = gameState.currentPlayer);
-}
-if (
-  typeof gameState !== "undefined" &&
-  typeof gameState.deckId !== "undefined"
-) {
-  gameState.deckId !== deckId && (deckId = gameState.deckId);
-}
+initializeGameListener(); // calls updateGameValues
+
+// if (
+//   typeof gameState !== "undefined" &&
+//   typeof gameState.bluePlayerHand !== "undefined"
+// ) {
+//   gameState.bluePlayerHand !== bluePlayerHand &&
+//     (bluePlayerHand = gameState.bluePlayerHand);
+// }
+// if (
+//   typeof gameState !== "undefined" &&
+//   typeof gameState.greenPlayerHand !== "undefined"
+// ) {
+//   gameState.greenPlayerHand !== greenPlayerHand &&
+//     (greenPlayerHand = gameState.greenPlayerHand);
+// }
+// if (
+//   typeof gameState !== "undefined" &&
+//   typeof gameState.boardState !== "undefined"
+// ) {
+//   gameState.boardState !== boardState && (boardState = gameState.boardState);
+// }
+// if (
+//   typeof gameState !== "undefined" &&
+//   typeof gameState.currentPlayer !== "undefined"
+// ) {
+//   gameState.currentPlayer !== currentPlayer &&
+//     (currentPlayer = gameState.currentPlayer);
+// }
+// if (
+//   typeof gameState !== "undefined" &&
+//   typeof gameState.deckId !== "undefined"
+// ) {
+//   gameState.deckId !== deckId && (deckId = gameState.deckId);
+// }
 
 // updateCurrentPlayer("green");
 // updateDeckId(deckId);
