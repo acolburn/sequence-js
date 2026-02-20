@@ -361,7 +361,7 @@ async function newGame() {
 // Display blue player's hand in the UI
 function updateUIForBluePlayerHand() {
   if (currentPlayer === "blue") {
-    const handDisplay = document.getElementById("hand-display"); // Assuming there's a displaying area for player's hands
+    const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightblue"; // Set background color for blue player
     handDisplay.innerHTML = ""; // Clear current display
 
@@ -377,13 +377,14 @@ function updateUIForBluePlayerHand() {
         handDisplay.appendChild(cardDiv); // Add card to hand display
       }
     });
+    highlightCards(bluePlayerHand);
   }
 }
 
 // Display green player's hand in the UI
 function updateUIForGreenPlayerHand() {
   if (currentPlayer === "green") {
-    const handDisplay = document.getElementById("hand-display"); // Assuming there's a displaying area for player's hands
+    const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightgreen"; // Set background color for green player
     handDisplay.innerHTML = ""; // Clear current display
 
@@ -399,6 +400,7 @@ function updateUIForGreenPlayerHand() {
         handDisplay.appendChild(cardDiv); // Add card to hand display
       }
     });
+    highlightCards(greenPlayerHand);
   }
 }
 
