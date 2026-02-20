@@ -25,6 +25,7 @@ export {
   updateBluePlayerHand,
   updateBoardState,
   initializeGameListener,
+  updateNewGame,
 };
 
 // Global variable to hold the game state
@@ -63,6 +64,17 @@ function updateBluePlayerHand(bluePlayerHand) {
 function updateBoardState(boardState) {
   const deckIdRef = ref(database, "game/boardState");
   set(deckIdRef, boardState);
+}
+
+function updateNewGame(boardState, bluePlayerHand, greenPlayerHand) {
+  let db = ref(database, "game/boardState");
+  set(db, boardState);
+  db = ref(database, "game/bluePlayerHand");
+  set(db, bluePlayerHand);
+  db = ref(database, "game/greenPlayerHand");
+  set(db, greenPlayerHand);
+  db = ref(database, "game/currentPlayer");
+  set(db, "blue");
 }
 
 // Function to initialize the game listener
