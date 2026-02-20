@@ -418,7 +418,7 @@ function updateUIForDiscardImage(card_image) {
   const discardImg = createElement(
     "img",
     null,
-    { width: "100%", height: "auto", border: "2px solid red" },
+    { width: "100%", height: "auto" },
     { src: card_image },
   );
   discardSlot.innerHTML = "";
