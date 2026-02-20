@@ -6,6 +6,7 @@ import {
   updateGreenPlayerHand,
   updateBluePlayerHand,
   updateBoardState,
+  updateDiscardImage,
   updateNewGame,
   initializeGameListener,
 } from "./firestore.js";
@@ -85,11 +86,11 @@ function makeBoard() {
 }
 
 // Save the current board state
-function saveBoardState() {
+async function saveBoardState() {
   // make an array corresponding to each cell. Items will be either "blue","green", or "none"
   const stateToSave = boardState.map((overlay) => overlay || "none");
   // update database
-  updateBoardState(stateToSave);
+  await updateBoardState(stateToSave);
 }
 
 // updates the board (from boardState) to display the blue and green chips
@@ -116,7 +117,7 @@ function updateBoardChipDisplay() {
 
 // Toggle overlay visibility and update board state
 // Event fires when player clicks board
-function toggleChipVisibility(overlay, index) {
+async function toggleChipVisibility(overlay, index) {
   if (overlay.style.visibility === "visible") {
     overlay.style.visibility = "hidden";
     boardState[index] = "none";
@@ -126,7 +127,7 @@ function toggleChipVisibility(overlay, index) {
     boardState[index] =
       overlayImage === "./images/chipBlue_border_small.png" ? "blue" : "green";
   }
-  saveBoardState(); // Save board state & update database after every click
+  await saveBoardState(); // Save board state & update database after every click
   // updateBoardOverlays(); // Update the board visuals
 }
 
@@ -186,9 +187,8 @@ const makePlayerHand = (playerHand) => {
   highlightBoardCardsMatchingHand(playerHand);
 };
 
-// Handle individual card click to update status
-
-function handleCardClick(card, playerHand) {
+// Click card in hand
+async function handleCardClick(card, playerHand) {
   console.log(`${card.code} Image clicked!`);
   const discardImg = createElement(
     "img",
@@ -209,14 +209,15 @@ function handleCardClick(card, playerHand) {
     `When handleCardClick was clicked, currentPlayer was ${currentPlayer}`,
   );
   currentPlayer === "blue"
-    ? updateBluePlayerHand(playerHand)
-    : updateGreenPlayerHand(playerHand);
+    ? await updateBluePlayerHand(playerHand)
+    : await updateGreenPlayerHand(playerHand);
+  await updateDiscardImage(card.image);
 }
 
 btnEndTurn.addEventListener("click", () => switchPlayers());
 
 // Switch player function
-function switchPlayers() {
+async function switchPlayers() {
   // Toggle player logic using the currentPlayer variable
   let newCurrentPlayer = "";
   if (currentPlayer === "blue") {
@@ -228,20 +229,20 @@ function switchPlayers() {
   if (newCurrentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
-    updateCurrentPlayer("blue");
+    await updateCurrentPlayer("blue");
     makePlayerHand(bluePlayerHand);
     highlightBoardCardsMatchingHand(bluePlayerHand);
   } else {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
-    updateCurrentPlayer("green");
+    await updateCurrentPlayer("green");
     makePlayerHand(greenPlayerHand);
     highlightBoardCardsMatchingHand(greenPlayerHand);
   }
 }
 
 // Add images to side container
-function makeSideContainer() {
+async function makeSideContainer() {
   deckSlot.innerHTML = "";
   discardSlot.innerHTML = "";
   // color button to match initial player
@@ -261,13 +262,13 @@ function makeSideContainer() {
     //   currentPlayer == "blue" ? bluePlayerHand : greenPlayerHand;
     fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`)
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         if (currentPlayer == "blue") {
           bluePlayerHand.push(data.cards[0].code);
-          updateBluePlayerHand(bluePlayerHand);
+          await updateBluePlayerHand(bluePlayerHand);
         } else {
           greenPlayerHand.push(data.cards[0].code);
-          updateGreenPlayerHand(greenPlayerHand);
+          await updateGreenPlayerHand(greenPlayerHand);
         }
       });
   });
@@ -292,41 +293,42 @@ btnNewGame.addEventListener("click", async function () {
 
 async function newGame() {
   await makeDeck();
-  // clear board of colored chips, update db, make board
+
   boardState = new Array(boardCardOrder.length).fill("none");
-  // clear hands
   bluePlayerHand.length = 0;
   greenPlayerHand.length = 0;
 
-  let res;
-  let data;
   for (let i = 0; i < 7; i++) {
-    res = await fetch(
+    let res = await fetch(
       `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
     );
-    data = await res.json();
+    let data = await res.json();
     bluePlayerHand.push(data.cards[0].code);
   }
-  makePlayerHand(bluePlayerHand); // display blue hand;
 
-  // make the green player hand, don't display it yet
   for (let i = 0; i < 7; i++) {
-    res = await fetch(
+    let res = await fetch(
       `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`,
     );
-    data = await res.json();
+    let data = await res.json();
     greenPlayerHand.push(data.cards[0].code);
   }
 
-  currentPlayer = "blue"; // Set initial currentPlayer
+  // Update the database state
+  await updateNewGame(boardState, bluePlayerHand, greenPlayerHand); // Wait for this to finish
+
+  // Now that we know the state is set, update the locl UI
+  makePlayerHand(bluePlayerHand);
+  makeSideContainer();
+  makeBoard(); // make board before highlighting
+  highlightBoardCardsMatchingHand(bluePlayerHand);
+
+  currentPlayer = "blue";
   overlayImage = "./images/chipBlue_border_small.png";
   btnEndTurn.style.background = "lightblue";
-  highlightBoardCardsMatchingHand(bluePlayerHand); // redundant?
 
-  updateNewGame(boardState, bluePlayerHand, greenPlayerHand); //also sets currentPlayer=blue
-
-  makeSideContainer();
-  makeBoard();
+  // Call this to make sure the local state matches the database
+  initializeGameListener();
 }
 
 // Display blue player's hand in the UI
@@ -402,16 +404,25 @@ function updateUIForCurrentPlayer() {
   if (currentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
-    updateCurrentPlayer("blue");
     makePlayerHand(bluePlayerHand);
     highlightBoardCardsMatchingHand(bluePlayerHand);
   } else {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
-    updateCurrentPlayer("green");
     makePlayerHand(greenPlayerHand);
     highlightBoardCardsMatchingHand(greenPlayerHand);
   }
+}
+
+function updateUIForDiscardImage(card_image) {
+  const discardImg = createElement(
+    "img",
+    null,
+    { width: "100%", height: "auto", border: "2px solid red" },
+    { src: card_image },
+  );
+  discardSlot.innerHTML = "";
+  discardSlot.appendChild(discardImg);
 }
 
 // Function to update game values
@@ -448,6 +459,9 @@ const updateGameValues = (gameState) => {
     deckId = gameState.deckId;
     // updateUIForDeckId();
     // }
+  }
+  if (gameState.discard_image !== undefined) {
+    updateUIForDiscardImage(gameState.discard_image);
   }
 };
 export { updateGameValues };

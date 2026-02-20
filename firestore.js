@@ -24,6 +24,7 @@ export {
   updateGreenPlayerHand,
   updateBluePlayerHand,
   updateBoardState,
+  updateDiscardImage,
   initializeGameListener,
   updateNewGame,
 };
@@ -31,7 +32,7 @@ export {
 // Global variable to hold the game state
 let gameState = {};
 
-function updateCurrentPlayer(newPlayer) {
+async function updateCurrentPlayer(newPlayer) {
   // Create a reference to the currentPlayer node
   const currentPlayerRef = ref(database, "game/currentPlayer");
   // Update the value to the new player color
@@ -44,37 +45,44 @@ function updateCurrentPlayer(newPlayer) {
   // });
 }
 
-function updateDeckId(deckId) {
+async function updateDiscardImage(discard_image) {
+  const deckIdRef = ref(database, "game/discard_image");
+  set(deckIdRef, discard_image);
+}
+
+async function updateDeckId(deckId) {
   const deckIdRef = ref(database, "game/deckId");
   set(deckIdRef, deckId);
 }
 
-function updateGreenPlayerHand(greenPlayerHand) {
+async function updateGreenPlayerHand(greenPlayerHand) {
   //   console.log("updating green player hand");
   const deckIdRef = ref(database, "game/greenPlayerHand");
   set(deckIdRef, greenPlayerHand);
 }
 
-function updateBluePlayerHand(bluePlayerHand) {
+async function updateBluePlayerHand(bluePlayerHand) {
   //   console.log("update blue player hand");
   const deckIdRef = ref(database, "game/bluePlayerHand");
   set(deckIdRef, bluePlayerHand);
 }
 
-function updateBoardState(boardState) {
+async function updateBoardState(boardState) {
   const deckIdRef = ref(database, "game/boardState");
   set(deckIdRef, boardState);
 }
 
-function updateNewGame(boardState, bluePlayerHand, greenPlayerHand) {
+async function updateNewGame(boardState, bluePlayerHand, greenPlayerHand) {
   let db = ref(database, "game/boardState");
-  set(db, boardState);
+  await set(db, boardState); // Ensure this is awaited
   db = ref(database, "game/bluePlayerHand");
-  set(db, bluePlayerHand);
+  await set(db, bluePlayerHand); // Ensure this is awaited
   db = ref(database, "game/greenPlayerHand");
-  set(db, greenPlayerHand);
+  await set(db, greenPlayerHand); // Ensure this is awaited
   db = ref(database, "game/currentPlayer");
-  set(db, "blue");
+  await set(db, "blue"); // Ensure this is awaited
+  db = ref(database, "game/discard_image");
+  await set(db, "");
 }
 
 // Function to initialize the game listener
