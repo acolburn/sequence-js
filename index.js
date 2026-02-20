@@ -43,7 +43,6 @@ async function makeDeck() {
   );
   const data = await response.json();
   deckId = data.deck_id;
-  // update database
   updateDeckId(deckId);
 }
 
@@ -164,20 +163,6 @@ const highlightBoardCardsMatchingHand = (playerHand) => {
   });
 };
 
-// Remove overlays of a specific image from the board
-// const removeCardOverlays = (imagePath) => {
-//   const boardCards = document.querySelectorAll("#board .card");
-//   const absoluteImagePath = new URL(imagePath, window.location.href).href;
-
-//   boardCards.forEach((cardDiv) => {
-//     cardDiv.querySelectorAll(".overlay").forEach((overlay) => {
-//       if (overlay.src === absoluteImagePath) {
-//         cardDiv.removeChild(overlay);
-//       }
-//     });
-//   });
-// };
-
 // Display player's hand in the UI
 const makePlayerHand = (playerHand) => {
   const handDisplay = document.getElementById("hand-display");
@@ -199,10 +184,6 @@ const makePlayerHand = (playerHand) => {
 
   // update board to reflect new hand
   highlightBoardCardsMatchingHand(playerHand);
-  // update database
-  // currentPlayer === "blue"
-  // ? updateBluePlayerHand(playerHand)
-  // : updateGreenPlayerHand(playerHand);
 };
 
 // Handle individual card click to update status
@@ -476,43 +457,3 @@ makeBoard();
 updateBoardChipDisplay();
 makeSideContainer();
 initializeGameListener(); // calls updateGameValues
-
-// if (
-//   typeof gameState !== "undefined" &&
-//   typeof gameState.bluePlayerHand !== "undefined"
-// ) {
-//   gameState.bluePlayerHand !== bluePlayerHand &&
-//     (bluePlayerHand = gameState.bluePlayerHand);
-// }
-// if (
-//   typeof gameState !== "undefined" &&
-//   typeof gameState.greenPlayerHand !== "undefined"
-// ) {
-//   gameState.greenPlayerHand !== greenPlayerHand &&
-//     (greenPlayerHand = gameState.greenPlayerHand);
-// }
-// if (
-//   typeof gameState !== "undefined" &&
-//   typeof gameState.boardState !== "undefined"
-// ) {
-//   gameState.boardState !== boardState && (boardState = gameState.boardState);
-// }
-// if (
-//   typeof gameState !== "undefined" &&
-//   typeof gameState.currentPlayer !== "undefined"
-// ) {
-//   gameState.currentPlayer !== currentPlayer &&
-//     (currentPlayer = gameState.currentPlayer);
-// }
-// if (
-//   typeof gameState !== "undefined" &&
-//   typeof gameState.deckId !== "undefined"
-// ) {
-//   gameState.deckId !== deckId && (deckId = gameState.deckId);
-// }
-
-// updateCurrentPlayer("green");
-// updateDeckId(deckId);
-// updateGreenPlayerHand(greenPlayerHand);
-// updateBluePlayerHand(bluePlayerHand);
-// updateBoardState(boardState);
