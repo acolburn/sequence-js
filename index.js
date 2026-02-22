@@ -9,11 +9,14 @@ import {
   updateDiscardImage,
   updateNewGame,
   initializeGameListener,
+  startNewGame,
+  joinNewGame,
 } from "./firestore.js";
 import { boardCardOrder } from "./gameboard.js";
 
 let overlayImage = "";
 let currentPlayer; // Starting player
+let playerId;
 let bluePlayerHand = []; // Blue player's hand
 let greenPlayerHand = []; // Green player's hand
 
@@ -24,6 +27,8 @@ const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
 const btnEndTurn = document.getElementById("end-turn");
 const btnNewGame = document.getElementById("new-game");
+const btnJoinGame = document.getElementById("join-game");
+
 let deckId;
 
 // Utility Function to Create and Configure DOM Elements
@@ -287,11 +292,35 @@ async function makeSideContainer() {
   discardSlot.appendChild(discardImg);
 }
 
+btnJoinGame.addEventListener("click", async function () {
+  await joinGame();
+});
+
+async function joinGame() {
+  // TODO Dialog box?
+  // create playerId
+  playerId = Math.random();
+  // TODO this method should check bluePlayerId is set before assigning greenPlayerId
+  // go to db, set greenPlayerId
+  await joinNewGame(playerId);
+  alert("New game starting. You will be the green player.");
+}
+
 btnNewGame.addEventListener("click", async function () {
   await newGame();
 });
 
 async function newGame() {
+  // TODO make a joinGame() method to assign greenPlayer
+  // TODO Dialog box telling player everything from the last game is going to be deleted?
+  // TODO if player clicks newGame(), he shouldn't be able to also click joinGame()?
+  // create playerId
+  playerId = Math.random();
+  // go to db and delete values for bluePlayerId and greenPlayerId
+  // set bluePlayerId to playerId
+  await startNewGame(playerId);
+  alert("New game starting. You will be the blue player.");
+
   await makeDeck();
 
   boardState = new Array(boardCardOrder.length).fill("none");
