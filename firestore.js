@@ -27,6 +27,8 @@ export {
   updateDiscardImage,
   initializeGameListener,
   updateNewGame,
+  startNewGame,
+  joinNewGame,
 };
 
 // Global variable to hold the game state
@@ -70,6 +72,20 @@ async function updateBluePlayerHand(bluePlayerHand) {
 async function updateBoardState(boardState) {
   const deckIdRef = ref(database, "game/boardState");
   set(deckIdRef, boardState);
+}
+
+async function startNewGame(playerId) {
+  // set game initiator to bluePlayerId
+  let db = ref(database, "game/bluePlayerId");
+  await set(db, playerId);
+  // clear greenPlayerId
+  db = ref(database, "game/greenPlayerId");
+  await set(db, "");
+}
+
+async function joinNewGame(playerId) {
+  let db = ref(database, "game/greenPlayerId");
+  await set(db, playerId);
 }
 
 async function updateNewGame(boardState, bluePlayerHand, greenPlayerHand) {

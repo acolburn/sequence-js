@@ -304,6 +304,7 @@ async function joinGame() {
   // go to db, set greenPlayerId
   await joinNewGame(playerId);
   alert("New game starting. You will be the green player.");
+  btnJoinGame.style.background = "lightgreen";
 }
 
 btnNewGame.addEventListener("click", async function () {
@@ -320,6 +321,7 @@ async function newGame() {
   // set bluePlayerId to playerId
   await startNewGame(playerId);
   alert("New game starting. You will be the blue player.");
+  btnNewGame.style.background = "lightblue";
 
   await makeDeck();
 
