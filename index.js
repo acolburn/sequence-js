@@ -11,12 +11,13 @@ import {
   initializeGameListener,
   startNewGame,
   joinNewGame,
+  getPlayerIdColor,
 } from "./firestore.js";
 import { boardCardOrder } from "./gameboard.js";
 
 let overlayImage = "";
 let currentPlayer; // Starting player
-let playerId;
+let playerId = localStorage.getItem("playerId") || null; // assign value if it exists, else it's null
 let bluePlayerHand = []; // Blue player's hand
 let greenPlayerHand = []; // Green player's hand
 
@@ -123,22 +124,35 @@ function updateBoardChipDisplay() {
 // Toggle overlay visibility and update board state
 // Event fires when player clicks board
 async function toggleChipVisibility(overlay, index) {
-  if (overlay.style.visibility === "visible") {
-    overlay.style.visibility = "hidden";
-    boardState[index] = "none";
-  } else {
-    overlay.style.visibility = "visible";
+  const myColor = await getPlayerIdColor(playerId);
+  if (myColor === currentPlayer) {
+    // can only add/remove chips from board during your turn
+    if (overlay.style.visibility === "visible") {
+      overlay.style.visibility = "hidden";
+      boardState[index] = "none";
+    } else {
+      overlay.style.visibility = "visible";
 
-    boardState[index] =
-      overlayImage === "./images/chipBlue_border_small.png" ? "blue" : "green";
+      boardState[index] =
+        overlayImage === "./images/chipBlue_border_small.png"
+          ? "blue"
+          : "green";
+    }
+    await saveBoardState(); // Save board state & update database after every click
   }
-  await saveBoardState(); // Save board state & update database after every click
-  // updateBoardOverlays(); // Update the board visuals
 }
 
 // Highlight on playing board the cards in player's hand
-const highlightBoardCardsMatchingHand = (playerHand) => {
-  const imagePath = "./images/blue_check_mark.png";
+const highlightBoardCardsMatchingHand = async (playerHand) => {
+  let imagePath;
+  const myColor = await getPlayerIdColor(playerId);
+  console.log(`highlightBoardCard, myColor=${myColor}`);
+  if (myColor === "green") {
+    imagePath = "./images/green_check_mark.png";
+  } else imagePath = "./images/blue_check_mark.png";
+  console.log(`imagePath in highlightBoardCard: ${imagePath}`);
+
+  // imagePath = "./images/green_check_mark.png";
 
   const boardCards = board.querySelectorAll(".card");
 
@@ -150,8 +164,8 @@ const highlightBoardCardsMatchingHand = (playerHand) => {
       const cardCode = cardCodeMatch[1];
       let overlay = cardDiv.querySelector(".checkmark-overlay");
 
-      // Create overlay if it doesn't already exist
       if (!overlay) {
+        // Create overlay if it doesn't exist
         overlay = createElement(
           "img",
           "checkmark-overlay",
@@ -159,6 +173,9 @@ const highlightBoardCardsMatchingHand = (playerHand) => {
           { src: imagePath },
         );
         cardDiv.appendChild(overlay);
+      } else {
+        // Update existing overlay's src
+        overlay.src = imagePath;
       }
 
       // Update overlay visibility
@@ -170,10 +187,8 @@ const highlightBoardCardsMatchingHand = (playerHand) => {
 };
 
 // Display player's hand in the UI
-const makePlayerHand = (playerHand) => {
+const displayPlayerHand = async (playerHand) => {
   const handDisplay = document.getElementById("hand-display");
-  handDisplay.style.background =
-    currentPlayer === "blue" ? "lightblue" : "lightgreen";
   handDisplay.innerHTML = "";
   playerHand.forEach((code) => {
     const card = findCardByCode(code);
@@ -194,7 +209,20 @@ const makePlayerHand = (playerHand) => {
 
 // Click card in hand
 async function handleCardClick(card, playerHand) {
+  // bluePlayer cannot click green hand, and greenPlayer cannot click blue hand
+  const myColor = await getPlayerIdColor(playerId);
+  console.log(
+    `I clicked a hand card. myColor is ${myColor} and the currentPlayer is ${currentPlayer}`,
+  );
+  if (
+    (currentPlayer === "green" && myColor === "blue") ||
+    (currentPlayer === "blue" && myColor === "green")
+  ) {
+    console.log("It is not your turn");
+    return;
+  }
   console.log(`${card.code} Image clicked!`);
+  // display clicked card in discard pile
   const discardImg = createElement(
     "img",
     null,
@@ -204,11 +232,16 @@ async function handleCardClick(card, playerHand) {
   discardSlot.innerHTML = "";
   discardSlot.appendChild(discardImg);
 
+  // remove card that was clicked from playerHand
   const index = playerHand.indexOf(card.code);
   if (index !== -1) {
     playerHand.splice(index, 1);
-    makePlayerHand(playerHand);
+    displayPlayerHand(playerHand);
   }
+
+  // update board to reflect new hand
+  highlightBoardCardsMatchingHand(playerHand);
+
   // update database
   console.log(
     `When handleCardClick was clicked, currentPlayer was ${currentPlayer}`,
@@ -235,14 +268,19 @@ async function switchPlayers() {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
     await updateCurrentPlayer("blue");
-    makePlayerHand(bluePlayerHand);
-    highlightBoardCardsMatchingHand(bluePlayerHand);
+    document.getElementById("current-player").innerHTML =
+      '<h4 style="color: blue;">current player: blue</h4>';
+    // displayPlayerHand(bluePlayerHand);
+    // highlightBoardCardsMatchingHand(bluePlayerHand); ... redundant
   } else {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
     await updateCurrentPlayer("green");
-    makePlayerHand(greenPlayerHand);
-    highlightBoardCardsMatchingHand(greenPlayerHand);
+    document.getElementById("current-player").innerHTML =
+      '<h4 style="color: green;">current player: green</h4>';
+
+    // displayPlayerHand(greenPlayerHand);
+    // highlightBoardCardsMatchingHand(greenPlayerHand); ... redundant
   }
 }
 
@@ -300,11 +338,19 @@ async function joinGame() {
   // TODO Dialog box?
   // create playerId
   playerId = Math.random();
+  localStorage.setItem("playerId", playerId); // store value in local storage key 'playerId'
   // TODO this method should check bluePlayerId is set before assigning greenPlayerId
   // go to db, set greenPlayerId
   await joinNewGame(playerId);
   alert("New game starting. You will be the green player.");
-  btnJoinGame.style.background = "lightgreen";
+  // btnJoinGame.style.background = "lightgreen";
+  document.getElementById("hand-display").style.background = "lightgreen";
+  document.getElementById("current-player").innerHTML =
+    '<h4 style="color: blue;">current player: blue</h4>';
+
+  // when game starts, before blue plays, we want check marks to be green for thsi player
+  // highlightBoardCardsMatchingHand(bluePlayerHand);
+  displayPlayerHand(greenPlayerHand);
 }
 
 btnNewGame.addEventListener("click", async function () {
@@ -312,16 +358,17 @@ btnNewGame.addEventListener("click", async function () {
 });
 
 async function newGame() {
-  // TODO make a joinGame() method to assign greenPlayer
-  // TODO Dialog box telling player everything from the last game is going to be deleted?
-  // TODO if player clicks newGame(), he shouldn't be able to also click joinGame()?
   // create playerId
   playerId = Math.random();
+  localStorage.setItem("playerId", playerId); // store value in local storage key 'playerId'
   // go to db and delete values for bluePlayerId and greenPlayerId
   // set bluePlayerId to playerId
   await startNewGame(playerId);
-  alert("New game starting. You will be the blue player.");
-  btnNewGame.style.background = "lightblue";
+  alert(
+    "New game starting. Everything from previous games will be deleted. You will be the blue player.",
+  );
+  // btnNewGame.style.background = "lightblue";
+  document.getElementById("hand-display").style.background = "lightblue";
 
   await makeDeck();
 
@@ -349,12 +396,14 @@ async function newGame() {
   await updateNewGame(boardState, bluePlayerHand, greenPlayerHand); // Wait for this to finish
 
   // Now that we know the state is set, update the locl UI
-  makePlayerHand(bluePlayerHand);
+  displayPlayerHand(bluePlayerHand);
   makeSideContainer();
   makeBoard(); // make board before highlighting
   highlightBoardCardsMatchingHand(bluePlayerHand);
 
   currentPlayer = "blue";
+  document.getElementById("current-player").innerHTML =
+    '<h4 style="color: blue;">current player: blue</h4>';
   overlayImage = "./images/chipBlue_border_small.png";
   btnEndTurn.style.background = "lightblue";
 
@@ -363,8 +412,9 @@ async function newGame() {
 }
 
 // Display blue player's hand in the UI
-function updateUIForBluePlayerHand() {
-  if (currentPlayer === "blue") {
+async function updateUIForBluePlayerHand() {
+  const myColor = await getPlayerIdColor(playerId);
+  if (myColor === "blue" && currentPlayer === "blue") {
     const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightblue"; // Set background color for blue player
     handDisplay.innerHTML = ""; // Clear current display
@@ -386,8 +436,9 @@ function updateUIForBluePlayerHand() {
 }
 
 // Display green player's hand in the UI
-function updateUIForGreenPlayerHand() {
-  if (currentPlayer === "green") {
+async function updateUIForGreenPlayerHand() {
+  const myColor = await getPlayerIdColor(playerId);
+  if (myColor === "green" && currentPlayer === "green") {
     const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightgreen"; // Set background color for green player
     handDisplay.innerHTML = ""; // Clear current display
@@ -429,19 +480,22 @@ function updateUIForBoardState() {
   });
 }
 
-function updateUIForCurrentPlayer() {
+async function updateUIForCurrentPlayer() {
   console.log("currentPlayer, inside function:", currentPlayer);
+  const myColor = await getPlayerIdColor(playerId);
   // unsure all of this is necessary ...
-  if (currentPlayer === "blue") {
+  if (myColor === "blue" && currentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
-    makePlayerHand(bluePlayerHand);
-    highlightBoardCardsMatchingHand(bluePlayerHand);
-  } else {
+    displayPlayerHand(bluePlayerHand);
+    document.getElementById("current-player").innerHTML =
+      '<h4 style="color: blue;">current player: blue</h4>';
+  } else if (myColor === "green" && currentPlayer === "green") {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
-    makePlayerHand(greenPlayerHand);
-    highlightBoardCardsMatchingHand(greenPlayerHand);
+    displayPlayerHand(greenPlayerHand);
+    document.getElementById("current-player").innerHTML =
+      '<h4 style="color: green;">current player: green</h4>';
   }
 }
 

@@ -7,6 +7,7 @@ import {
   set,
   onValue,
   remove,
+  get,
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
 const appSettings = {
@@ -29,6 +30,7 @@ export {
   updateNewGame,
   startNewGame,
   joinNewGame,
+  getPlayerIdColor,
 };
 
 // Global variable to hold the game state
@@ -86,6 +88,34 @@ async function startNewGame(playerId) {
 async function joinNewGame(playerId) {
   let db = ref(database, "game/greenPlayerId");
   await set(db, playerId);
+}
+
+// Async function to find the color of the player ID
+async function getPlayerIdColor(playerId) {
+  // Create references to player IDs
+  const dbBlue = ref(database, "game/bluePlayerId");
+  const dbGreen = ref(database, "game/greenPlayerId");
+
+  try {
+    // Get the values
+    const bluePlayerSnapshot = await get(dbBlue);
+    const bluePlayerId = bluePlayerSnapshot.val();
+
+    const greenPlayerSnapshot = await get(dbGreen);
+    const greenPlayerId = greenPlayerSnapshot.val();
+
+    // Compare IDs to determine color
+    if (playerId === bluePlayerId) {
+      return "blue";
+    } else if (playerId === greenPlayerId) {
+      return "green";
+    } else {
+      return "none";
+    }
+  } catch (error) {
+    console.error("Error fetching player IDs: ", error);
+    return "error"; // Optionally handle errors
+  }
 }
 
 async function updateNewGame(boardState, bluePlayerHand, greenPlayerHand) {
