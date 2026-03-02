@@ -3,6 +3,7 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
+  /* border: 1px solid red; */
 }
 
 body {
@@ -15,8 +16,8 @@ body {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-gap: 10px;
-  width: calc(90%-20px); /* width - gap*/
-  /* max-height: 85%; */
+  /* width: calc(90%-20px); width - gap*/
+  /* max-width: 700px; */
   height: calc(90%-90px); /* height - gap*/
   margin: 0;
 }
@@ -59,16 +60,18 @@ body {
   margin-top: 2px; /* Space from the board */
   width: 100%;
   border: 1px solid brown;
+  /* width: calc(90%-20px); width - gap */
+  /* max-width: 700px; */
 }
 
 .hand-display .card {
-  max-width: 100px;
+  max-width: 60px;
   width: 8%;
 }
 
 #side-container {
   /* border: 1px solid brown; */
-  width: 10%; /* Adjust this width as needed for a card */
+  width: 4%; /* Adjust this width as needed for a card */
   display: flex;
   flex-direction: column;
   justify-content: center; /* Center the cards vertically */
@@ -79,11 +82,12 @@ body {
 
 #game-container {
   flex-grow: 1;
-  /* height: 100vh; */
+
   display: flex;
   flex-direction: column;
-  /* border: 2px solid red; */
   justify-content: flex-start; /* Start stacking items from the start */
+  width: calc(90%-20px); /* width - gap*/
+  max-width: 720px;
 }
 
 #discard-slot {

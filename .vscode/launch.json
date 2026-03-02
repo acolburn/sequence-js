@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch with LiveServer",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5500",
+      "webRoot": "${workspaceFolder}",
+      "runtimeExecutable": "/usr/bin/brave-browser",
+      "runtimeArgs": ["--remote-debugging-port=9222"]
+    }
+  ]
+}

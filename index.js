@@ -268,20 +268,29 @@ async function switchPlayers() {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
     await updateCurrentPlayer("blue");
-    document.getElementById("current-player").innerHTML =
-      '<h4 style="color: blue;">current player: blue</h4>';
+    // document.getElementById("current-player").innerHTML =
+    //   '<h4 style="color: blue;">current player: blue</h4>';
+    changePlayerColorNotification("blue");
     // displayPlayerHand(bluePlayerHand);
     // highlightBoardCardsMatchingHand(bluePlayerHand); ... redundant
   } else {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
     await updateCurrentPlayer("green");
-    document.getElementById("current-player").innerHTML =
-      '<h4 style="color: green;">current player: green</h4>';
+    // document.getElementById("current-player").innerHTML =
+    //   '<h4 style="color: green;">current player: green</h4>';
+    changePlayerColorNotification("green");
 
     // displayPlayerHand(greenPlayerHand);
     // highlightBoardCardsMatchingHand(greenPlayerHand); ... redundant
   }
+}
+
+function changePlayerColorNotification(currentPlayer) {
+  const color = currentPlayer == "blue" ? "lightblue" : "lightgreen";
+  document.getElementById("current-player").innerHTML =
+    `<h4 >${currentPlayer.toUpperCase()} PLAYING</h4>`;
+  document.getElementById("current-player").style.backgroundColor = color;
 }
 
 // Add images to side container
@@ -345,8 +354,11 @@ async function joinGame() {
   alert("New game starting. You will be the green player.");
   // btnJoinGame.style.background = "lightgreen";
   document.getElementById("hand-display").style.background = "lightgreen";
-  document.getElementById("current-player").innerHTML =
-    '<h4 style="color: blue;">current player: blue</h4>';
+  // document.getElementById("current-player").innerHTML =
+  //   '<h4 style="color: blue;">current player: blue</h4>';
+  changePlayerColorNotification("green");
+
+  await makeDeck();
 
   // when game starts, before blue plays, we want check marks to be green for thsi player
   // highlightBoardCardsMatchingHand(bluePlayerHand);
@@ -402,8 +414,9 @@ async function newGame() {
   highlightBoardCardsMatchingHand(bluePlayerHand);
 
   currentPlayer = "blue";
-  document.getElementById("current-player").innerHTML =
-    '<h4 style="color: blue;">current player: blue</h4>';
+  // document.getElementById("current-player").innerHTML =
+  //   '<h4 style="color: blue;">current player: blue</h4>';
+  changePlayerColorNotification("blue");
   overlayImage = "./images/chipBlue_border_small.png";
   btnEndTurn.style.background = "lightblue";
 
@@ -488,14 +501,16 @@ async function updateUIForCurrentPlayer() {
     overlayImage = "./images/chipBlue_border_small.png";
     btnEndTurn.style.background = "lightblue";
     displayPlayerHand(bluePlayerHand);
-    document.getElementById("current-player").innerHTML =
-      '<h4 style="color: blue;">current player: blue</h4>';
+    // document.getElementById("current-player").innerHTML =
+    //   '<h4 style="color: blue;">current player: blue</h4>';
+    changePlayerColorNotification("blue");
   } else if (myColor === "green" && currentPlayer === "green") {
     overlayImage = "./images/chipGreen_border_small.png";
     btnEndTurn.style.background = "lightgreen";
     displayPlayerHand(greenPlayerHand);
-    document.getElementById("current-player").innerHTML =
-      '<h4 style="color: green;">current player: green</h4>';
+    // document.getElementById("current-player").innerHTML =
+    //   '<h4 style="color: green;">current player: green</h4>';
+    changePlayerColorNotification("green");
   }
 }
 
