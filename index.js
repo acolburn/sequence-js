@@ -46,7 +46,7 @@ const createElement = (type, className, styleProps = {}, attributes = {}) => {
 // makes deck, assigns deckId used throughout the JavaScript
 async function makeDeck() {
   const response = await fetch(
-    "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1",
+    "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2",
   );
   const data = await response.json();
   deckId = data.deck_id;
