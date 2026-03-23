@@ -544,17 +544,22 @@ const updateGameValues = (gameState) => {
     // }
   }
   if (gameState.bluePlayerHand !== undefined) {
-    // if (gameState.bluePlayerHand !== bluePlayerHand) {
-    bluePlayerHand = gameState.bluePlayerHand;
-    updateUIForBluePlayerHand();
-
-    // }
+    if (
+      JSON.stringify(gameState.bluePlayerHand) !==
+      JSON.stringify(bluePlayerHand)
+    ) {
+      bluePlayerHand = gameState.bluePlayerHand;
+      updateUIForBluePlayerHand();
+    }
   }
   if (gameState.greenPlayerHand !== undefined) {
-    // if (gameState.greenPlayerHand !== greenPlayerHand) {
-    greenPlayerHand = gameState.greenPlayerHand;
-    updateUIForGreenPlayerHand();
-    // }
+    if (
+      JSON.stringify(gameState.greenPlayerHand) !==
+      JSON.stringify(greenPlayerHand)
+    ) {
+      greenPlayerHand = gameState.greenPlayerHand;
+      updateUIForGreenPlayerHand();
+    }
   }
   if (gameState.boardState !== undefined) {
     // if (gameState.boardState !== boardState) {
