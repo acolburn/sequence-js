@@ -50,7 +50,7 @@ async function makeDeck() {
   );
   const data = await response.json();
   deckId = data.deck_id;
-  updateDeckId(deckId);
+  await updateDeckId(deckId);
 }
 
 // Helper function to find card by cards.code value (see cards.js)
@@ -357,7 +357,9 @@ async function joinGame() {
   // TODO this method should check bluePlayerId is set before assigning greenPlayerId
   // go to db, set greenPlayerId
   await joinNewGame(playerId);
-  alert("New game starting. You will be the green player.");
+  alert(
+    "New game starting. You will be the green player. Deck ID is " + deckId,
+  );
   // btnJoinGame.style.background = "lightgreen";
   document.getElementById("hand-display").style.background = "lightgreen";
   // document.getElementById("current-player").innerHTML =
@@ -365,10 +367,6 @@ async function joinGame() {
   changePlayerColorNotification("green");
 
   // await makeDeck();
-  alert(
-    "New are joining a game. You will be the green player. Deck ID is " +
-      deckId,
-  );
 
   // when game starts, before blue plays, we want check marks to be green for thsi player
   // highlightBoardCardsMatchingHand(bluePlayerHand);
@@ -386,14 +384,13 @@ async function newGame() {
   // go to db and delete values for bluePlayerId and greenPlayerId
   // set bluePlayerId to playerId
   await startNewGame(playerId);
+  await makeDeck();
   alert(
     "New game starting. Everything from previous games will be deleted. You will be the blue player. Deck ID is " +
       deckId,
   );
   // btnNewGame.style.background = "lightblue";
   document.getElementById("hand-display").style.background = "lightblue";
-
-  await makeDeck();
 
   boardState = new Array(boardCardOrder.length).fill("none");
   bluePlayerHand.length = 0;
