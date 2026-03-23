@@ -365,6 +365,10 @@ async function joinGame() {
   changePlayerColorNotification("green");
 
   // await makeDeck();
+  alert(
+    "New are joining a game. You will be the green player. Deck ID is " +
+      deckId,
+  );
 
   // when game starts, before blue plays, we want check marks to be green for thsi player
   // highlightBoardCardsMatchingHand(bluePlayerHand);
@@ -383,7 +387,8 @@ async function newGame() {
   // set bluePlayerId to playerId
   await startNewGame(playerId);
   alert(
-    "New game starting. Everything from previous games will be deleted. You will be the blue player.",
+    "New game starting. Everything from previous games will be deleted. You will be the blue player. Deck ID is " +
+      deckId,
   );
   // btnNewGame.style.background = "lightblue";
   document.getElementById("hand-display").style.background = "lightblue";
