@@ -12,6 +12,7 @@ import {
   startNewGame,
   joinNewGame,
   getPlayerIdColor,
+  updateDiscardPile,
 } from "./firestore.js";
 import { boardCardOrder } from "./gameboard.js";
 
@@ -20,6 +21,7 @@ let currentPlayer; // Starting player
 let playerId = localStorage.getItem("playerId") || null; // assign value if it exists, else it's null
 let bluePlayerHand = []; // Blue player's hand
 let greenPlayerHand = []; // Green player's hand
+let discardPile = []; // Discard pile
 
 // saves cell overlay image states (none, blue chip, or green chip)
 let boardState = new Array(boardCardOrder.length).fill("none");
@@ -231,8 +233,11 @@ async function handleCardClick(card, playerHand) {
   );
   discardSlot.innerHTML = "";
   discardSlot.appendChild(discardImg);
+  // add card to discard pile in database
+  discardPile.push(card.code);
+  await updateDiscardPile(discardPile);
 
-  // remove card that was clicked from playerHand
+  // remove card from playerHand
   const index = playerHand.indexOf(card.code);
   if (index !== -1) {
     playerHand.splice(index, 1);
@@ -307,7 +312,9 @@ async function makeSideContainer() {
     { width: "100%", height: "auto" },
     { src: cardBackImage },
   );
-  // Event handler for clicking deck
+  // **********************************************************
+  // * EVENT HANDLER FOR CLICKING DECK IMAGE (DRAWING A CARD) *
+  // **********************************************************
   deckImg.addEventListener("click", () => {
     // console.log("Deck Image clicked!")
     // const playerHand =
@@ -324,8 +331,11 @@ async function makeSideContainer() {
         }
         if (data.remaining === 0) {
           alert("Deck is empty! Reshuffling discard pile into deck.");
-          await makeDeck();
-          // Optionally, you could also reset the discard pile here
+          // reshuffle logic: make new deck with discard pile, assign new deckId
+          await makeDeckFromDiscardPile(discardPile);
+          // reset discard pile in database and local state
+          discardPile.length = 0;
+          await updateDiscardPile(discardPile);
           await updateDiscardImage(cardBackImage); // Reset discard image to card back
         }
       });
@@ -382,9 +392,9 @@ async function newGame() {
   playerId = Math.random();
   localStorage.setItem("playerId", playerId); // store value in local storage key 'playerId'
   // go to db and delete values for bluePlayerId and greenPlayerId
-  // set bluePlayerId to playerId
+  // set bluePlayerId to playerId, leave greenPlayerId empty, initialize discardPile to empty array
   await startNewGame(playerId);
-  await makeDeck();
+  await makeDeck(); // also initializes deckId in database
   alert(
     "New game starting. Everything from previous games will be deleted. You will be the blue player. Deck ID is " +
       deckId,
@@ -432,6 +442,22 @@ async function newGame() {
 
   // Call this to make sure the local state matches the database
   initializeGameListener();
+}
+
+async function makeDeckFromDiscardPile(discardPile) {
+  // add discard pile back into deck using API
+  // make discard pile into string of card codes separated by commas
+  const cardCodes = discardPile.join(",");
+  // add discard pile back into deck using API
+  // syntax: https://deckofcardsapi.com/api/deck/<<deck_id>>/return/?cards=AS,2S
+  const response = await fetch(
+    `https://deckofcardsapi.com/api/deck/${deckId}/return/?cards=${cardCodes}`,
+  );
+  // reshuffle the deck using API
+  await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/shuffle/`);
+  const data = await response.json();
+  console.log("Reshuffled deck with discard pile. New deck state:", data);
+  // await makeDeck(); // creates new deck and updates deckId in database
 }
 
 // Display blue player's hand in the UI

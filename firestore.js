@@ -31,6 +31,7 @@ export {
   startNewGame,
   joinNewGame,
   getPlayerIdColor,
+  updateDiscardPile,
 };
 
 // Global variable to hold the game state
@@ -71,6 +72,11 @@ async function updateBluePlayerHand(bluePlayerHand) {
   set(deckIdRef, bluePlayerHand);
 }
 
+async function updateDiscardPile(discardPile) {
+  const deckIdRef = ref(database, "game/discardPile");
+  set(deckIdRef, discardPile);
+}
+
 async function updateBoardState(boardState) {
   const deckIdRef = ref(database, "game/boardState");
   set(deckIdRef, boardState);
@@ -83,6 +89,9 @@ async function startNewGame(playerId) {
   // clear greenPlayerId
   db = ref(database, "game/greenPlayerId");
   await set(db, "");
+  // initialize empty discard pile
+  db = ref(database, "game/discardPile");
+  await set(db, []);
 }
 
 async function joinNewGame(playerId) {
