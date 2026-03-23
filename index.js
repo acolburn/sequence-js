@@ -322,6 +322,12 @@ async function makeSideContainer() {
           greenPlayerHand.push(data.cards[0].code);
           await updateGreenPlayerHand(greenPlayerHand);
         }
+        if (data.remaining === 0) {
+          alert("Deck is empty! Reshuffling discard pile into deck.");
+          await makeDeck();
+          // Optionally, you could also reset the discard pile here
+          await updateDiscardImage(cardBackImage); // Reset discard image to card back
+        }
       });
   });
 
@@ -358,7 +364,7 @@ async function joinGame() {
   //   '<h4 style="color: blue;">current player: blue</h4>';
   changePlayerColorNotification("green");
 
-  await makeDeck();
+  // await makeDeck();
 
   // when game starts, before blue plays, we want check marks to be green for thsi player
   // highlightBoardCardsMatchingHand(bluePlayerHand);
