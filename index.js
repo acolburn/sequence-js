@@ -393,8 +393,10 @@ async function newGame() {
   document.getElementById("hand-display").style.background = "lightblue";
 
   boardState = new Array(boardCardOrder.length).fill("none");
-  bluePlayerHand.length = 0;
-  greenPlayerHand.length = 0;
+  // bluePlayerHand.length = 0;
+  // greenPlayerHand.length = 0;
+  let bluePlayerHand = [];
+  let greenPlayerHand = [];
 
   for (let i = 0; i < 7; i++) {
     let res = await fetch(
@@ -413,7 +415,7 @@ async function newGame() {
   }
 
   // Update the database state
-  await updateNewGame(boardState, bluePlayerHand, greenPlayerHand); // Wait for this to finish
+  await updateNewGame(boardState, bluePlayerHand, greenPlayerHand);
 
   // Now that we know the state is set, update the locl UI
   displayPlayerHand(bluePlayerHand);
