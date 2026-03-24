@@ -375,16 +375,9 @@ async function joinGame() {
   alert(
     "New game starting. You will be the green player. Deck ID is " + deckId,
   );
-  // btnJoinGame.style.background = "lightgreen";
   document.getElementById("hand-display").style.background = "lightgreen";
-  // document.getElementById("current-player").innerHTML =
-  //   '<h4 style="color: blue;">current player: blue</h4>';
+  btnEndTurn.style.visibility = "hidden"; // hide end turn button until game state is loaded and it's this player's turn
   changePlayerColorNotification("green");
-
-  // await makeDeck();
-
-  // when game starts, before blue plays, we want check marks to be green for thsi player
-  // highlightBoardCardsMatchingHand(bluePlayerHand);
   displayPlayerHand(greenPlayerHand);
 }
 
