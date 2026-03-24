@@ -146,13 +146,13 @@ async function toggleChipVisibility(overlay, index) {
 
 // Highlight on playing board the cards in player's hand
 const highlightBoardCardsMatchingHand = async (playerHand) => {
-  let imagePath;
+  const imagePath = "./images/yellow_check_mark.png";
   const myColor = await getPlayerIdColor(playerId);
   console.log(`highlightBoardCard, myColor=${myColor}`);
-  if (myColor === "green") {
-    imagePath = "./images/green_check_mark.png";
-  } else imagePath = "./images/blue_check_mark.png";
-  console.log(`imagePath in highlightBoardCard: ${imagePath}`);
+  // if (myColor === "green") {
+  //   imagePath = "./images/green_check_mark.png";
+  // } else imagePath = "./images/blue_check_mark.png";
+  // console.log(`imagePath in highlightBoardCard: ${imagePath}`);
 
   // imagePath = "./images/green_check_mark.png";
 
