@@ -537,6 +537,10 @@ function updateUIForBoardState() {
 async function updateUIForCurrentPlayer() {
   console.log("currentPlayer, inside function:", currentPlayer);
   const myColor = await getPlayerIdColor(playerId);
+  // toggle end turn button visibility; visible only when it's your turn
+  btnEndTurn.style.visibility =
+    currentPlayer === myColor ? "visible" : "hidden";
+
   // unsure all of this is necessary ...
   if (myColor === "blue" && currentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
