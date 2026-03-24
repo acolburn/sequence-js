@@ -191,6 +191,11 @@ const highlightBoardCardsMatchingHand = async (playerHand) => {
 // Display player's hand in the UI
 const displayPlayerHand = async (playerHand) => {
   const handDisplay = document.getElementById("hand-display");
+  if (playerHand === bluePlayerHand) {
+    handDisplay.style.background = "lightblue"; // Set background color for blue player
+  } else {
+    handDisplay.style.background = "lightgreen"; // Set background color for green player
+  }
   handDisplay.innerHTML = "";
   playerHand.forEach((code) => {
     const card = findCardByCode(code);
@@ -547,6 +552,12 @@ async function updateUIForCurrentPlayer() {
     // document.getElementById("current-player").innerHTML =
     //   '<h4 style="color: green;">current player: green</h4>';
     changePlayerColorNotification("green");
+  }
+  // Code added to make non-current player hand background gray
+  if (myColor === "blue" && currentPlayer === "green") {
+    document.getElementById("hand-display").style.background = "lightgray";
+  } else if (myColor === "green" && currentPlayer === "blue") {
+    document.getElementById("hand-display").style.background = "lightgray";
   }
 }
 
