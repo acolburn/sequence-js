@@ -140,3 +140,7 @@ button#end-turn {
     width: 8%;
   }
 }
+
+.grayscale {
+  filter: grayscale(100%);
+}

@@ -191,10 +191,10 @@ const highlightBoardCardsMatchingHand = async (playerHand) => {
 // Display player's hand in the UI
 const displayPlayerHand = async (playerHand) => {
   const handDisplay = document.getElementById("hand-display");
-  if (playerHand === bluePlayerHand) {
+  if (playerHand === bluePlayerHand && currentPlayer === "blue") {
     handDisplay.style.background = "lightblue"; // Set background color for blue player
   } else {
-    handDisplay.style.background = "lightgreen"; // Set background color for green player
+    handDisplay.style.background = "lightgreen";
   }
   handDisplay.innerHTML = "";
   playerHand.forEach((code) => {
@@ -462,8 +462,8 @@ async function makeDeckFromDiscardPile(discardPile) {
 // Display blue player's hand in the UI
 async function updateUIForBluePlayerHand() {
   const myColor = await getPlayerIdColor(playerId);
+  const handDisplay = document.getElementById("hand-display");
   if (myColor === "blue" && currentPlayer === "blue") {
-    const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightblue"; // Set background color for blue player
     handDisplay.innerHTML = ""; // Clear current display
 
@@ -473,22 +473,23 @@ async function updateUIForBluePlayerHand() {
         const cardDiv = createElement("div", "card", {
           backgroundImage: `url(${card.image})`, // Set background image of card
         });
+
         cardDiv.addEventListener("click", () =>
           handleCardClick(card, bluePlayerHand),
         );
         handDisplay.appendChild(cardDiv); // Add card to hand display
       }
     });
+
     highlightBoardCardsMatchingHand(bluePlayerHand);
   }
-  // Code added to make non-current player cards grayscaled
 }
 
 // Display green player's hand in the UI
 async function updateUIForGreenPlayerHand() {
   const myColor = await getPlayerIdColor(playerId);
+  const handDisplay = document.getElementById("hand-display");
   if (myColor === "green" && currentPlayer === "green") {
-    const handDisplay = document.getElementById("hand-display");
     handDisplay.style.background = "lightgreen"; // Set background color for green player
     handDisplay.innerHTML = ""; // Clear current display
 
@@ -498,12 +499,14 @@ async function updateUIForGreenPlayerHand() {
         const cardDiv = createElement("div", "card", {
           backgroundImage: `url(${card.image})`, // Set background image of card
         });
+
         cardDiv.addEventListener("click", () =>
           handleCardClick(card, greenPlayerHand),
         );
         handDisplay.appendChild(cardDiv); // Add card to hand display
       }
     });
+
     highlightBoardCardsMatchingHand(greenPlayerHand);
   }
 }
@@ -532,31 +535,33 @@ function updateUIForBoardState() {
 async function updateUIForCurrentPlayer() {
   console.log("currentPlayer, inside function:", currentPlayer);
   const myColor = await getPlayerIdColor(playerId);
-  // toggle end turn button visibility; visible only when it's your turn
-  btnEndTurn.style.visibility =
-    currentPlayer === myColor ? "visible" : "hidden";
 
-  // unsure all of this is necessary ...
-  if (myColor === "blue" && currentPlayer === "blue") {
-    overlayImage = "./images/chipBlue_border_small.png";
-    btnEndTurn.style.background = "blue";
-    displayPlayerHand(bluePlayerHand);
-    // document.getElementById("current-player").innerHTML =
-    //   '<h4 style="color: blue;">current player: blue</h4>';
-    changePlayerColorNotification("blue");
-  } else if (myColor === "green" && currentPlayer === "green") {
-    overlayImage = "./images/chipGreen_border_small.png";
-    btnEndTurn.style.background = "green";
-    displayPlayerHand(greenPlayerHand);
-    // document.getElementById("current-player").innerHTML =
-    //   '<h4 style="color: green;">current player: green</h4>';
-    changePlayerColorNotification("green");
-  }
-  // Code added to make non-current player hand background gray
-  if (myColor === "blue" && currentPlayer === "green") {
-    document.getElementById("hand-display").style.background = "lightgray";
-  } else if (myColor === "green" && currentPlayer === "blue") {
-    document.getElementById("hand-display").style.background = "lightgray";
+  // Check if it's your turn
+  const isYourTurn = currentPlayer === myColor;
+
+  // Toggle end turn button visibility
+  btnEndTurn.style.visibility = isYourTurn ? "visible" : "hidden";
+
+  // Toggle hand display grayscale effect
+  const handDisplay = document.getElementById("hand-display");
+  isYourTurn
+    ? handDisplay.classList.remove("grayscale")
+    : handDisplay.classList.add("grayscale");
+
+  // Only update UI if it's your turn
+  if (isYourTurn) {
+    // Set the overlay image based on color
+    overlayImage = `./images/chip${myColor.charAt(0).toUpperCase() + myColor.slice(1)}_border_small.png`;
+
+    // Set button background color
+    btnEndTurn.style.background = myColor;
+
+    // Display the correct player's hand
+    const playerHand = myColor === "blue" ? bluePlayerHand : greenPlayerHand;
+    displayPlayerHand(playerHand);
+
+    // Show current player notification
+    changePlayerColorNotification(myColor);
   }
 }
 
