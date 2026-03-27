@@ -366,19 +366,19 @@ btnJoinGame.addEventListener("click", async function () {
 });
 
 async function joinGame() {
-  // TODO Dialog box?
-  // create playerId
+  if (!confirm("New game starting. You will be green. Click OK to continue.")) {
+    return;
+  }
+
   playerId = Math.random();
   localStorage.setItem("playerId", playerId); // store value in local storage key 'playerId'
   // TODO this method should check bluePlayerId is set before assigning greenPlayerId
   // go to db, set greenPlayerId
   await joinNewGame(playerId);
-  alert(
-    "New game starting. You will be the green player. Deck ID is " + deckId,
-  );
-  document.getElementById("hand-display").style.background = "lightgreen";
+
+  // document.getElementById("hand-display").style.background = "lightgreen";
   btnEndTurn.style.visibility = "hidden"; // hide end turn button until game state is loaded and it's this player's turn
-  changePlayerColorNotification("green");
+  changePlayerColorNotification("blue"); // show blue player notification at start of game
   displayPlayerHand(greenPlayerHand);
 }
 
@@ -387,6 +387,14 @@ btnNewGame.addEventListener("click", async function () {
 });
 
 async function newGame() {
+  if (
+    !confirm(
+      "New game starting. Everything from previous games will be deleted. You will be blue. Click OK to continue.",
+    )
+  ) {
+    return;
+  }
+  console.log("New Game button clicked! Starting new game setup...");
   // create playerId
   playerId = Math.random();
   localStorage.setItem("playerId", playerId); // store value in local storage key 'playerId'
@@ -394,10 +402,7 @@ async function newGame() {
   // set bluePlayerId to playerId, leave greenPlayerId empty, initialize discardPile to empty array
   await startNewGame(playerId);
   await makeDeck(); // also initializes deckId in database
-  alert(
-    "New game starting. Everything from previous games will be deleted. You will be the blue player. Deck ID is " +
-      deckId,
-  );
+
   // btnNewGame.style.background = "lightblue";
   document.getElementById("hand-display").style.background = "lightblue";
 
