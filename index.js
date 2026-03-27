@@ -208,6 +208,7 @@ const displayPlayerHand = async (playerHand) => {
       );
       handDisplay.appendChild(cardDiv);
     }
+    handDisplay.appendChild(btnEndTurn); // Ensure the end turn button stays at the end of the hand display
   });
 
   // update board to reflect new hand
@@ -276,7 +277,7 @@ async function switchPlayers() {
 
   if (newCurrentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
-    btnEndTurn.style.background = "lightblue";
+    btnEndTurn.style.background = "blue";
     await updateCurrentPlayer("blue");
     // document.getElementById("current-player").innerHTML =
     //   '<h4 style="color: blue;">current player: blue</h4>';
@@ -285,7 +286,7 @@ async function switchPlayers() {
     // highlightBoardCardsMatchingHand(bluePlayerHand); ... redundant
   } else {
     overlayImage = "./images/chipGreen_border_small.png";
-    btnEndTurn.style.background = "lightgreen";
+    btnEndTurn.style.background = "green";
     await updateCurrentPlayer("green");
     // document.getElementById("current-player").innerHTML =
     //   '<h4 style="color: green;">current player: green</h4>';
@@ -436,7 +437,7 @@ async function newGame() {
   //   '<h4 style="color: blue;">current player: blue</h4>';
   changePlayerColorNotification("blue");
   overlayImage = "./images/chipBlue_border_small.png";
-  btnEndTurn.style.background = "lightblue";
+  btnEndTurn.style.background = "blue";
 
   // Call this to make sure the local state matches the database
   initializeGameListener();
@@ -480,6 +481,7 @@ async function updateUIForBluePlayerHand() {
     });
     highlightBoardCardsMatchingHand(bluePlayerHand);
   }
+  // Code added to make non-current player cards grayscaled
 }
 
 // Display green player's hand in the UI
@@ -537,14 +539,14 @@ async function updateUIForCurrentPlayer() {
   // unsure all of this is necessary ...
   if (myColor === "blue" && currentPlayer === "blue") {
     overlayImage = "./images/chipBlue_border_small.png";
-    btnEndTurn.style.background = "lightblue";
+    btnEndTurn.style.background = "blue";
     displayPlayerHand(bluePlayerHand);
     // document.getElementById("current-player").innerHTML =
     //   '<h4 style="color: blue;">current player: blue</h4>';
     changePlayerColorNotification("blue");
   } else if (myColor === "green" && currentPlayer === "green") {
     overlayImage = "./images/chipGreen_border_small.png";
-    btnEndTurn.style.background = "lightgreen";
+    btnEndTurn.style.background = "green";
     displayPlayerHand(greenPlayerHand);
     // document.getElementById("current-player").innerHTML =
     //   '<h4 style="color: green;">current player: green</h4>';
