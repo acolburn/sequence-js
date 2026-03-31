@@ -267,6 +267,17 @@ btnEndTurn.addEventListener("click", () => switchPlayers());
 
 // Switch player function
 async function switchPlayers() {
+  // Tell player if they don't have a full hand, let them draw a card before ending turn
+  const playerHand =
+    currentPlayer === "blue" ? bluePlayerHand : greenPlayerHand;
+  if (playerHand.length < 7) {
+    const continueTurn = confirm(
+      `YOU ONLY HAVE ${playerHand.length} CARDS! Click CANCEL if you want to draw a card before ending your turn.`,
+    );
+    if (!continueTurn) {
+      return;
+    }
+  }
   // Toggle player logic using the currentPlayer variable
   let newCurrentPlayer = "";
   if (currentPlayer === "blue") {
