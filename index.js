@@ -31,8 +31,27 @@ const discardSlot = document.getElementById("discard-slot"); // discard pile loc
 const btnEndTurn = document.getElementById("end-turn");
 const btnNewGame = document.getElementById("new-game");
 const btnJoinGame = document.getElementById("join-game");
+const introOverlay = document.getElementById("intro-overlay");
+const btnDismissOverlay = document.getElementById("dismiss-overlay");
 
 let deckId;
+
+// Function to show/hide the intro overlay
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if user has already seen the overlay
+  const hasSeenOverlay = localStorage.getItem("hasSeenOverlay");
+  // Show only for first-time visitors
+  if (hasSeenOverlay === "true") {
+    introOverlay.classList.add("hidden");
+  } else {
+    introOverlay.classList.remove("hidden");
+  }
+  // Handle dismiss click
+  btnDismissOverlay.addEventListener("click", () => {
+    introOverlay.classList.add("hidden");
+    localStorage.setItem("hasSeenOverlay", "true");
+  });
+});
 
 // Utility Function to Create and Configure DOM Elements
 const createElement = (type, className, styleProps = {}, attributes = {}) => {
@@ -638,7 +657,8 @@ const updateGameValues = (gameState) => {
 };
 export { updateGameValues };
 
-// Example usage
+// Usage
+
 makeBoard();
 updateBoardChipDisplay();
 makeSideContainer();

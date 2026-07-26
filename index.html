@@ -7,6 +7,39 @@
     <title>Sequence</title>
   </head>
   <body>
+    <!-- Overlay -->
+    <div class="intro-overlay hidden" id="intro-overlay">
+      <div class="overlay-card">
+        Welcome to Sequence! You and an opponent play each other from your
+        phone, tablet, or desktop. Here's how:
+        <ul>
+          <li>Player1 taps the "New Game" button. They'll be blue.</li>
+          <li>Then Player2 taps the "Join Game" button. They'll be green.</li>
+          <li>
+            Blue goes first; note the message saying it's blue's turn. The
+            message will change when it's green's turn.
+          </li>
+          <li>
+            The squares where a player can legally play are marked. Player taps
+            a square to place a checker (a second tap removes a checker).
+          </li>
+          <li>Player taps a card in their hand to discard it.</li>
+          <li>Player taps the face down deck to get a new card.</li>
+          <li>
+            When finished, tap the "End Turn" button. Play then transfers to the
+            green player.
+          </li>
+          <li>
+            Just like real life, rule enforcement is up to the players,
+            including those related to playing Jacks. Players decide when the
+            game is done.
+          </li>
+        </ul>
+        <button id="dismiss-overlay">DISMISS</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
     <div id="side-container">
       <div id="deck-slot" class="card"></div>
       <div id="discard-slot" class="card"></div>
