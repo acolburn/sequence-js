@@ -160,6 +160,7 @@ async function toggleChipVisibility(overlay, index) {
         myColor === "blue"
           ? "./images/chipBlue_border_small.png"
           : "./images/chipGreen_border_small.png";
+
       overlay.classList.add("chip-preview");
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
