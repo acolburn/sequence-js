@@ -112,6 +112,12 @@ button#join-game,
   cursor: pointer;
 }
 
+#jack-rules {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-align: center;
+}
+
 button#end-turn {
   color: white;
 }
