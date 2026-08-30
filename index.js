@@ -153,11 +153,22 @@ async function toggleChipVisibility(overlay, index) {
       boardState[index] = "none";
     } else {
       overlay.style.visibility = "visible";
+      // red chip pulses and glows for 2 seconds before settling into the correct color
+      // overlay.src = "./images/chipRedWhite_border.png";
+      // chip pulses and glows for 2 seconds before settling into the correct color
+      overlay.src =
+        myColor === "blue"
+          ? "./images/chipBlue_border_small.png"
+          : "./images/chipGreen_border_small.png";
+      overlay.classList.add("chip-preview");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       boardState[index] =
         overlayImage === "./images/chipBlue_border_small.png"
           ? "blue"
           : "green";
+      overlay.src = overlayImage;
+      overlay.classList.remove("chip-preview");
     }
     await saveBoardState(); // Save board state & update database after every click
   }
