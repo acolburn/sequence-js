@@ -13,6 +13,7 @@ import {
   joinNewGame,
   getPlayerIdColor,
   updateDiscardPile,
+  updateChipPreview,
 } from "./firestore.js";
 import { boardCardOrder } from "./gameboard.js";
 
@@ -162,6 +163,7 @@ async function toggleChipVisibility(overlay, index) {
           : "./images/chipGreen_border_small.png";
 
       overlay.classList.add("chip-preview");
+      updateChipPreview({ index, color: myColor }); // let opponent see the same preview
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       boardState[index] =
@@ -170,6 +172,7 @@ async function toggleChipVisibility(overlay, index) {
           : "green";
       overlay.src = overlayImage;
       overlay.classList.remove("chip-preview");
+      updateChipPreview(null);
     }
     await saveBoardState(); // Save board state & update database after every click
   }
@@ -558,6 +561,25 @@ async function updateUIForGreenPlayerHand() {
   }
 }
 
+// Applies (or clears) the shared chip-placement preview animation for both players
+function updateUIForChipPreview(chipPreview) {
+  const boardCards = board.querySelectorAll(".card");
+
+  boardCards.forEach((cardDiv, index) => {
+    const overlay = cardDiv.querySelector(".overlay");
+    if (chipPreview && chipPreview.index === index) {
+      overlay.src =
+        chipPreview.color === "blue"
+          ? "./images/chipBlue_border_small.png"
+          : "./images/chipGreen_border_small.png";
+      overlay.style.visibility = "visible";
+      overlay.classList.add("chip-preview");
+    } else {
+      overlay.classList.remove("chip-preview");
+    }
+  });
+}
+
 // Update the visual state of the board based on the boardState
 function updateUIForBoardState() {
   const boardCards = board.querySelectorAll(".card"); // Select all cards on the board
@@ -565,6 +587,7 @@ function updateUIForBoardState() {
   boardCards.forEach((cardDiv, index) => {
     const overlay = cardDiv.querySelector(".overlay"); // Select the overlay for the card
     const currentState = boardState[index]; // Get current state for this card
+    overlay.classList.remove("chip-preview"); // final state overrides any pending preview
 
     // Determine which image to show based on `boardState`
     if (currentState === "blue") {
@@ -650,6 +673,9 @@ const updateGameValues = (gameState) => {
       greenPlayerHand = gameState.greenPlayerHand;
       updateUIForGreenPlayerHand();
     }
+  }
+  if (gameState.chipPreview !== undefined) {
+    updateUIForChipPreview(gameState.chipPreview);
   }
   if (gameState.boardState !== undefined) {
     // if (gameState.boardState !== boardState) {
