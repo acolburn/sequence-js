@@ -32,7 +32,6 @@ export {
   joinNewGame,
   getPlayerIdColor,
   updateDiscardPile,
-  updateChipPreview,
 };
 
 // Global variable to hold the game state
@@ -81,12 +80,6 @@ async function updateDiscardPile(discardPile) {
 async function updateBoardState(boardState) {
   const deckIdRef = ref(database, "game/boardState");
   set(deckIdRef, boardState);
-}
-
-// broadcasts the in-progress chip placement (or null to clear) so both players see the preview
-async function updateChipPreview(chipPreview) {
-  const chipPreviewRef = ref(database, "game/chipPreview");
-  set(chipPreviewRef, chipPreview);
 }
 
 async function startNewGame(playerId) {

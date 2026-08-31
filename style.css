@@ -47,17 +47,6 @@ body {
   visibility: hidden;
 }
 
-.chip-preview {
-  animation: chip-preview-pulse 0.55s ease-in-out infinite;
-  filter: drop-shadow(0 0 6px #ffeb3b) drop-shadow(0 0 12px #f00);
-}
-
-@keyframes chip-preview-pulse {
-  50% {
-    transform: scale(1.35);
-  }
-}
-
 .checkmark-overlay {
   position: absolute;
   top: 12%;

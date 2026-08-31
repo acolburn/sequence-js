@@ -13,7 +13,6 @@ import {
   joinNewGame,
   getPlayerIdColor,
   updateDiscardPile,
-  updateChipPreview,
 } from "./firestore.js";
 import { boardCardOrder } from "./gameboard.js";
 
@@ -26,8 +25,6 @@ let discardPile = []; // Discard pile
 
 // saves cell overlay image states (none, blue chip, or green chip)
 let boardState = new Array(boardCardOrder.length).fill("none");
-// index of the cell currently showing the shared chip-placement preview, if any
-let activeChipPreviewIndex = null;
 const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
@@ -156,27 +153,11 @@ async function toggleChipVisibility(overlay, index) {
       boardState[index] = "none";
     } else {
       overlay.style.visibility = "visible";
-      // red chip pulses and glows for 2 seconds before settling into the correct color
-      // overlay.src = "./images/chipRedWhite_border.png";
-      // chip pulses and glows for 2 seconds before settling into the correct color
-      overlay.src =
-        myColor === "blue"
-          ? "./images/chipBlue_border_small.png"
-          : "./images/chipGreen_border_small.png";
-
-      overlay.classList.add("chip-preview");
-      activeChipPreviewIndex = index;
-      updateChipPreview({ index, color: myColor }); // let opponent see the same preview
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       boardState[index] =
         overlayImage === "./images/chipBlue_border_small.png"
           ? "blue"
           : "green";
-      overlay.src = overlayImage;
-      overlay.classList.remove("chip-preview");
-      activeChipPreviewIndex = null;
-      updateChipPreview(null);
     }
     await saveBoardState(); // Save board state & update database after every click
   }
@@ -565,37 +546,13 @@ async function updateUIForGreenPlayerHand() {
   }
 }
 
-// Applies (or clears) the shared chip-placement preview animation for both players
-function updateUIForChipPreview(chipPreview) {
-  const boardCards = board.querySelectorAll(".card");
-
-  activeChipPreviewIndex = chipPreview ? chipPreview.index : null;
-
-  boardCards.forEach((cardDiv, index) => {
-    const overlay = cardDiv.querySelector(".overlay");
-    if (chipPreview && chipPreview.index === index) {
-      overlay.src =
-        chipPreview.color === "blue"
-          ? "./images/chipBlue_border_small.png"
-          : "./images/chipGreen_border_small.png";
-      overlay.style.visibility = "visible";
-      overlay.classList.add("chip-preview");
-    } else {
-      overlay.classList.remove("chip-preview");
-    }
-  });
-}
-
 // Update the visual state of the board based on the boardState
 function updateUIForBoardState() {
   const boardCards = board.querySelectorAll(".card"); // Select all cards on the board
 
   boardCards.forEach((cardDiv, index) => {
-    if (index === activeChipPreviewIndex) return; // don't clobber the cell mid-preview
-
     const overlay = cardDiv.querySelector(".overlay"); // Select the overlay for the card
     const currentState = boardState[index]; // Get current state for this card
-    overlay.classList.remove("chip-preview"); // final state overrides any pending preview
 
     // Determine which image to show based on `boardState`
     if (currentState === "blue") {
@@ -681,9 +638,6 @@ const updateGameValues = (gameState) => {
       greenPlayerHand = gameState.greenPlayerHand;
       updateUIForGreenPlayerHand();
     }
-  }
-  if (gameState.chipPreview !== undefined) {
-    updateUIForChipPreview(gameState.chipPreview);
   }
   if (gameState.boardState !== undefined) {
     // if (gameState.boardState !== boardState) {
