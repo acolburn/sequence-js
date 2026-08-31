@@ -25,6 +25,8 @@ let discardPile = []; // Discard pile
 
 // saves cell overlay image states (none, blue chip, or green chip)
 let boardState = new Array(boardCardOrder.length).fill("none");
+// last-rendered board state, used to detect newly-placed chips so we can pulse-highlight them
+let prevBoardState = [...boardState];
 const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
@@ -120,6 +122,30 @@ async function saveBoardState() {
   await updateBoardState(stateToSave);
 }
 
+// Sets an overlay's image/visibility to match a board cell state ("blue", "green", or "none")
+function applyChipDisplay(overlay, state) {
+  if (state === "blue") {
+    overlay.src = "./images/chipBlue_border_small.png";
+    overlay.style.visibility = "visible";
+  } else if (state === "green") {
+    overlay.src = "./images/chipGreen_border_small.png";
+    overlay.style.visibility = "visible";
+  } else {
+    overlay.style.visibility = "hidden";
+  }
+}
+
+// Briefly pulses/glows a newly-placed chip (visible to both players) before settling into its normal display
+function highlightCell(cardDiv, overlay, state) {
+  applyChipDisplay(overlay, state);
+  if (state !== "none") {
+    overlay.classList.remove("chip-highlight");
+    void overlay.offsetWidth; // restart animation if it's already running
+    overlay.classList.add("chip-highlight");
+    setTimeout(() => overlay.classList.remove("chip-highlight"), 2000);
+  }
+}
+
 // updates the board (from boardState) to display the blue and green chips
 // called after player clicks a cell (toggle Overlay, add chip to cell) and when switching players
 function updateBoardChipDisplay() {
@@ -127,18 +153,7 @@ function updateBoardChipDisplay() {
 
   boardCards.forEach((cardDiv, index) => {
     const overlay = cardDiv.querySelector(".overlay"); // Get the overlay image for the current card
-    const currentState = boardState[index]; // Check the state for the current index
-
-    // Determine which image to use based on the current state
-    if (currentState === "blue") {
-      overlay.src = "./images/chipBlue_border_small.png"; // Set overlay to blue chip
-      overlay.style.visibility = "visible"; // Make overlay visible
-    } else if (currentState === "green") {
-      overlay.src = "./images/chipGreen_border_small.png"; // Set overlay to green chip
-      overlay.style.visibility = "visible"; // Make overlay visible
-    } else {
-      overlay.style.visibility = "hidden"; // Hide overlay if state is none
-    }
+    applyChipDisplay(overlay, boardState[index]);
   });
 }
 
@@ -152,13 +167,14 @@ async function toggleChipVisibility(overlay, index) {
       overlay.style.visibility = "hidden";
       boardState[index] = "none";
     } else {
-      overlay.style.visibility = "visible";
-
       boardState[index] =
         overlayImage === "./images/chipBlue_border_small.png"
           ? "blue"
           : "green";
+      highlightCell(overlay.parentElement, overlay, boardState[index]);
     }
+    // mark as already rendered, so the firestore echo of this write doesn't re-trigger the pulse
+    prevBoardState[index] = boardState[index];
     await saveBoardState(); // Save board state & update database after every click
   }
 }
@@ -437,6 +453,7 @@ async function newGame() {
   document.getElementById("hand-display").style.background = "lightblue";
 
   boardState = new Array(boardCardOrder.length).fill("none");
+  prevBoardState = [...boardState];
   // bluePlayerHand.length = 0;
   // greenPlayerHand.length = 0;
   let bluePlayerHand = [];
@@ -547,6 +564,7 @@ async function updateUIForGreenPlayerHand() {
 }
 
 // Update the visual state of the board based on the boardState
+// Runs on every firestore sync, so this is where the opponent (and player, on echo) sees the pulse
 function updateUIForBoardState() {
   const boardCards = board.querySelectorAll(".card"); // Select all cards on the board
 
@@ -554,17 +572,14 @@ function updateUIForBoardState() {
     const overlay = cardDiv.querySelector(".overlay"); // Select the overlay for the card
     const currentState = boardState[index]; // Get current state for this card
 
-    // Determine which image to show based on `boardState`
-    if (currentState === "blue") {
-      overlay.src = "./images/chipBlue_border_small.png"; // Blue chip
-      overlay.style.visibility = "visible"; // Show overlay
-    } else if (currentState === "green") {
-      overlay.src = "./images/chipGreen_border_small.png"; // Green chip
-      overlay.style.visibility = "visible"; // Show overlay
+    if (currentState !== prevBoardState[index]) {
+      highlightCell(cardDiv, overlay, currentState);
     } else {
-      overlay.style.visibility = "hidden"; // Hide the overlay if state is none
+      applyChipDisplay(overlay, currentState);
     }
   });
+
+  prevBoardState = [...boardState];
 }
 
 async function updateUIForCurrentPlayer() {
