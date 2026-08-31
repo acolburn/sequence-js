@@ -26,6 +26,8 @@ let discardPile = []; // Discard pile
 
 // saves cell overlay image states (none, blue chip, or green chip)
 let boardState = new Array(boardCardOrder.length).fill("none");
+// index of the cell currently showing the shared chip-placement preview, if any
+let activeChipPreviewIndex = null;
 const board = document.getElementById("board"); // 10x10 grid
 const deckSlot = document.getElementById("deck-slot"); // deck location
 const discardSlot = document.getElementById("discard-slot"); // discard pile location
@@ -163,6 +165,7 @@ async function toggleChipVisibility(overlay, index) {
           : "./images/chipGreen_border_small.png";
 
       overlay.classList.add("chip-preview");
+      activeChipPreviewIndex = index;
       updateChipPreview({ index, color: myColor }); // let opponent see the same preview
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -172,6 +175,7 @@ async function toggleChipVisibility(overlay, index) {
           : "green";
       overlay.src = overlayImage;
       overlay.classList.remove("chip-preview");
+      activeChipPreviewIndex = null;
       updateChipPreview(null);
     }
     await saveBoardState(); // Save board state & update database after every click
@@ -565,6 +569,8 @@ async function updateUIForGreenPlayerHand() {
 function updateUIForChipPreview(chipPreview) {
   const boardCards = board.querySelectorAll(".card");
 
+  activeChipPreviewIndex = chipPreview ? chipPreview.index : null;
+
   boardCards.forEach((cardDiv, index) => {
     const overlay = cardDiv.querySelector(".overlay");
     if (chipPreview && chipPreview.index === index) {
@@ -585,6 +591,8 @@ function updateUIForBoardState() {
   const boardCards = board.querySelectorAll(".card"); // Select all cards on the board
 
   boardCards.forEach((cardDiv, index) => {
+    if (index === activeChipPreviewIndex) return; // don't clobber the cell mid-preview
+
     const overlay = cardDiv.querySelector(".overlay"); // Select the overlay for the card
     const currentState = boardState[index]; // Get current state for this card
     overlay.classList.remove("chip-preview"); // final state overrides any pending preview
