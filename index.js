@@ -101,6 +101,9 @@ function makeBoard() {
         { src: overlayImage, style: "visibility: hidden;" },
       );
       cardDiv.appendChild(overlay);
+      // covers the whole cell with a big pulsing glow so a selection is unmistakable, even at a glance
+      const cellHighlight = createElement("div", "cell-highlight");
+      cardDiv.appendChild(cellHighlight);
       board.appendChild(cardDiv);
 
       // Add click event to toggle the overlay; if it's hidden make it visible when clicked & visa-versa
@@ -135,14 +138,15 @@ function applyChipDisplay(overlay, state) {
   }
 }
 
-// Briefly pulses/glows a newly-placed chip (visible to both players) before settling into its normal display
+// Briefly pulses/glows the whole cell (visible to both players) before settling into the normal chip display
 function highlightCell(cardDiv, overlay, state) {
   applyChipDisplay(overlay, state);
   if (state !== "none") {
-    overlay.classList.remove("chip-highlight");
-    void overlay.offsetWidth; // restart animation if it's already running
-    overlay.classList.add("chip-highlight");
-    setTimeout(() => overlay.classList.remove("chip-highlight"), 2000);
+    const cellHighlight = cardDiv.querySelector(".cell-highlight");
+    cellHighlight.classList.remove("active");
+    void cellHighlight.offsetWidth; // restart animation if it's already running
+    cellHighlight.classList.add("active");
+    setTimeout(() => cellHighlight.classList.remove("active"), 2000);
   }
 }
 
